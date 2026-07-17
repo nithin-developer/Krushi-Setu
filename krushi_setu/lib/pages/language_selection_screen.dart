@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'auth_home_screen.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
   const LanguageSelectionScreen({super.key});
@@ -25,7 +26,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       name: 'Kannada',
       nativeName: 'ಕನ್ನಡ',
       icon: 'ಕೃ',
-      iconSize: 22,
+      iconSize: 18,
     ),
     _LanguageOption(name: 'English', nativeName: 'English', icon: 'A'),
     _LanguageOption(name: 'Hindi', nativeName: 'हिंदी', icon: 'अ'),
@@ -33,7 +34,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       name: 'Marathi',
       nativeName: 'मराठी',
       icon: 'क्ष',
-      iconSize: 22,
+      iconSize: 18,
     ),
     _LanguageOption(name: 'Tamil', nativeName: 'தமிழ்', icon: 'அ'),
     _LanguageOption(name: 'Telugu', nativeName: 'తెలుగు', icon: 'ఠ'),
@@ -46,7 +47,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     final horizontalPadding = size.width * 0.065;
 
     // Fixed header height — same size on all devices
-    const headerHeight = 240.0;
+    const headerHeight = 270.0;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
@@ -91,7 +92,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                           TextSpan(
                             style: TextStyle(
                               color: _textBlack,
-                              fontSize: 28,
+                              fontSize: 26,
                               fontWeight: FontWeight.w500,
                               height: 1.12,
                             ),
@@ -160,7 +161,14 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                 horizontalPadding,
                 padding.bottom + 14,
               ),
-              child: _ContinueButton(onPressed: () {}),
+              child: _ContinueButton(onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AuthHomeScreen(),
+                  ),
+                );
+              }),
             ),
           ],
         ),
@@ -241,8 +249,8 @@ class _LanguageTile extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOut,
-          height: 78,
-          padding: const EdgeInsets.symmetric(horizontal: 18),
+          height: 74,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             color: selected
                 ? Colors.white
@@ -276,8 +284,8 @@ class _LanguageTile extends StatelessWidget {
             children: [
               // Icon container
               Container(
-                width: 52,
-                height: 52,
+                width: 48,
+                height: 48,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: selected
@@ -295,13 +303,13 @@ class _LanguageTile extends StatelessWidget {
                     color: selected
                         ? _LanguageSelectionScreenState._green
                         : const Color(0xFF2A2A2A),
-                    fontSize: language.iconSize,
+                    fontSize: 18,
                     fontWeight: FontWeight.w800,
                     height: 1,
                   ),
                 ),
               ),
-              const SizedBox(width: 18),
+              const SizedBox(width: 16),
 
               // Language name
               Expanded(
@@ -317,7 +325,7 @@ class _LanguageTile extends StatelessWidget {
                         color: selected
                             ? _LanguageSelectionScreenState._green
                             : const Color(0xFF1E1E1E),
-                        fontSize: 19,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         height: 1.2,
                       ),
@@ -344,8 +352,8 @@ class _LanguageTile extends StatelessWidget {
               // Selection indicator
               if (selected)
                 Container(
-                  width: 34,
-                  height: 34,
+                  width: 28,
+                  height: 28,
                   decoration: const BoxDecoration(
                     color: _LanguageSelectionScreenState._green,
                     shape: BoxShape.circle,
@@ -356,7 +364,7 @@ class _LanguageTile extends StatelessWidget {
                 const Icon(
                   Icons.chevron_right_rounded,
                   color: Color(0xFF888888),
-                  size: 30,
+                  size: 26,
                 ),
             ],
           ),
@@ -410,7 +418,7 @@ class _ContinueButton extends StatelessWidget {
                   'Continue',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 17,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.3,
                   ),
@@ -497,7 +505,7 @@ class _LanguageOption {
     required this.name,
     required this.nativeName,
     required this.icon,
-    this.iconSize = 24,
+    this.iconSize = 20,
   });
 
   final String name;
