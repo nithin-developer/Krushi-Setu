@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:krushi_setu/pages/login_screen.dart';
 
 class AuthHomeScreen extends StatelessWidget {
   const AuthHomeScreen({super.key});
@@ -25,7 +26,7 @@ class AuthHomeScreen extends StatelessWidget {
               top: 0,
               left: 0,
               right: 0,
-              height: size.height * 0.6,
+              height: size.height * 0.8,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -172,7 +173,12 @@ class AuthHomeScreen extends StatelessWidget {
                         color: _green,
                         size: 24,
                       ),
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        );
+                      },
                     ),
                     
                     const SizedBox(height: 32),
