@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
 import 'register_screen.dart';
+import 'digital_twin_setup_screen.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -394,7 +395,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             shape: const StadiumBorder(),
                             clipBehavior: Clip.antiAlias,
                             child: InkWell(
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const DigitalTwinSetupScreen(),
+                                  ),
+                                );
+                              },
                               child: Stack(
                                 alignment: Alignment.center,
                                 children: [

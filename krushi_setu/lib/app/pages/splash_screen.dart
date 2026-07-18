@@ -37,7 +37,7 @@ class _SplashScreenState extends State<SplashScreen> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Image.asset('assets/backgrounds/splash_background.png', fit: BoxFit.cover),
+                Image.asset('assets/backgrounds/splash_bg.png', fit: BoxFit.cover),
                 const DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(

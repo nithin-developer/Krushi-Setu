@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
+import 'digital_twin_setup_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -356,7 +357,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           shape: const StadiumBorder(),
                           clipBehavior: Clip.antiAlias,
                           child: InkWell(
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const DigitalTwinSetupScreen(),
+                                ),
+                              );
+                            },
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
