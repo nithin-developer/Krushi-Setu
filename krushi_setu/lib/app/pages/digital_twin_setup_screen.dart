@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
+import 'package:krushi_setu/app/pages/digital_twin_step_1.dart';
+import 'package:krushi_setu/app/widgets/primary_button.dart';
 
 class DigitalTwinSetupScreen extends StatefulWidget {
   const DigitalTwinSetupScreen({super.key});
@@ -103,22 +105,23 @@ class _DigitalTwinSetupScreenState extends State<DigitalTwinSetupScreen> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               itemBuilder: (BuildContext context) {
-                                return _languageIcons.keys.map((String lang) {
-                                  return PopupMenuItem<String>(
-                                    value: lang,
-                                    child: Text(
-                                      lang,
-                                      style: TextStyle(
-                                        color: _selectedLanguage == lang
-                                            ? AppColors.primary
-                                            : AppColors.textPrimary,
-                                        fontWeight: _selectedLanguage == lang
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
+                                return <PopupMenuEntry<String>>[
+                                  for (final lang in _languageIcons.keys)
+                                    PopupMenuItem<String>(
+                                      value: lang,
+                                      child: Text(
+                                        lang,
+                                        style: TextStyle(
+                                          color: _selectedLanguage == lang
+                                              ? AppColors.primary
+                                              : AppColors.textPrimary,
+                                          fontWeight: _selectedLanguage == lang
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                        ),
                                       ),
                                     ),
-                                  );
-                                }).toList();
+                                ];
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -315,11 +318,16 @@ class _DigitalTwinSetupScreenState extends State<DigitalTwinSetupScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _ContinueButton(
-                    onPressed: () {
-                      // Action when clicked
-                    },
+                  PrimaryButton(
                     text: 'Get Started',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DigitalTwinStep1Screen(),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -435,90 +443,6 @@ class _DigitalTwinSetupScreenState extends State<DigitalTwinSetupScreen> {
       child: SizedBox(
         height: 20,
         child: CustomPaint(painter: DottedLinePainter()),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Continue Button — Matches language_selection_screen.dart design
-// ─────────────────────────────────────────────────────────────────────────────
-class _ContinueButton extends StatelessWidget {
-  const _ContinueButton({required this.onPressed, this.text = 'Continue'});
-
-  final VoidCallback onPressed;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    const double buttonHeight = 62;
-    const double circleSize = 50;
-
-    return SizedBox(
-      width: double.infinity,
-      height: buttonHeight,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(buttonHeight / 2),
-          gradient: const LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [
-              Color(0xFF1B5E2F), // darker green on left
-              Color(0xFF2E7D42), // mid green
-              Color(0xFF388E4A), // lighter green on right
-            ],
-            stops: [0.0, 0.5, 1.0],
-          ),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          shape: const StadiumBorder(),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onPressed,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Text — exactly centered in the full button
-                Text(
-                  text,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-
-                // Arrow circle pinned to the right
-                Positioned(
-                  right: 6,
-                  child: Container(
-                    width: circleSize,
-                    height: circleSize,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.10),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.arrow_forward_rounded,
-                      color: Color(0xFF1B5E2F),
-                      size: 26,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

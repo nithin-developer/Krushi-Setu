@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
+import 'package:krushi_setu/app/widgets/primary_button.dart';
 import 'auth_home_screen.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
@@ -156,14 +157,16 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                 horizontalPadding,
                 padding.bottom + 14,
               ),
-              child: _ContinueButton(onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AuthHomeScreen(),
-                  ),
-                );
-              }),
+              child: PrimaryButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AuthHomeScreen(),
+                    ),
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -372,85 +375,6 @@ class _LanguageTile extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Continue Button — Row-based layout to prevent arrow/text overlap
 // ─────────────────────────────────────────────────────────────────────────────
-class _ContinueButton extends StatelessWidget {
-  const _ContinueButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    const double buttonHeight = 62;
-    const double circleSize = 50;
-
-    return SizedBox(
-      width: double.infinity,
-      height: buttonHeight,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(buttonHeight / 2),
-          gradient: const LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [
-              Color(0xFF1B5E2F), // darker green on left
-              Color(0xFF2E7D42), // mid green
-              Color(0xFF388E4A), // lighter green on right
-            ],
-            stops: [0.0, 0.5, 1.0],
-          ),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          shape: const StadiumBorder(),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onPressed,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // "Continue" text — exactly centered in the full button
-                const Text(
-                  'Continue',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-
-                // Arrow circle pinned to the right
-                Positioned(
-                  right: 6,
-                  child: Container(
-                    width: circleSize,
-                    height: circleSize,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.10),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.arrow_forward_rounded,
-                      color: Color(0xFF1B5E2F),
-                      size: 26,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Curve Clipper — matches the design's sweeping S-curve

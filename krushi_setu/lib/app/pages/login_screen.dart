@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
+import 'package:krushi_setu/app/widgets/primary_button.dart';
 import 'register_screen.dart';
 import 'digital_twin_setup_screen.dart';
 class LoginScreen extends StatefulWidget {
@@ -373,76 +374,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 18),
 
                       // Login Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 62,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(31),
-                            gradient: const LinearGradient(
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                              colors: [
-                                Color(0xFF1B5E2F), // darker green on left
-                                Color(0xFF2E7D42), // mid green
-                                Color(0xFF388E4A), // lighter green on right
-                              ],
-                              stops: [0.0, 0.5, 1.0],
+                      PrimaryButton(
+                        text: 'Login',
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const DigitalTwinSetupScreen(),
                             ),
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            shape: const StadiumBorder(),
-                            clipBehavior: Clip.antiAlias,
-                            child: InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const DigitalTwinSetupScreen(),
-                                  ),
-                                );
-                              },
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  const Text(
-                                    'Login',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right: 6,
-                                    child: Container(
-                                      width: 50,
-                                      height: 50,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.10),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 3),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.arrow_forward_rounded,
-                                        color: Color(0xFF1B5E2F),
-                                        size: 26,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
 
                       const SizedBox(height: 24),
