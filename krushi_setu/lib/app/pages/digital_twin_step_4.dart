@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
 import 'package:krushi_setu/app/widgets/primary_button.dart';
+import 'package:krushi_setu/app/pages/digital_twin_complete.dart';
 
 class DigitalTwinStep4Screen extends StatefulWidget {
   const DigitalTwinStep4Screen({super.key});
@@ -56,11 +57,11 @@ class _DigitalTwinStep4ScreenState extends State<DigitalTwinStep4Screen> {
     },
     {
       'title': 'Vegetables',
-      'image': 'https://img.icons8.com/emoji/96/tomato-emoji.png',
+      'image': 'https://img.icons8.com/external-flaticons-flat-flat-icons/64/external-vegetables-vegan-and-vegetarian-flaticons-flat-flat-icons.png',
     },
     {
       'title': 'Fruits',
-      'image': 'https://img.icons8.com/emoji/96/mango-emoji.png',
+      'image': 'https://img.icons8.com/external-flaticons-flat-flat-icons/64/external-fruits-prehistoric-flaticons-flat-flat-icons.png',
     },
     {
       'title': 'Flowers',
@@ -629,7 +630,12 @@ class _DigitalTwinStep4ScreenState extends State<DigitalTwinStep4Screen> {
                     text: 'Complete Profile',
                     iconPosition: IconPosition.right,
                     onPressed: () {
-                      // TODO: Navigate to completion or dashboard
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DigitalTwinCompleteScreen(),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: 16),
