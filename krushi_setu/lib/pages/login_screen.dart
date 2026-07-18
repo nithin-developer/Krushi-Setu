@@ -15,6 +15,15 @@ class _LoginScreenState extends State<LoginScreen> {
   static const _textBlack = Color(0xFF1A1A1A);
 
   bool _obscurePassword = true;
+  String _selectedLanguage = 'Kannada';
+  final Map<String, String> _languageIcons = {
+    'Kannada': 'ಕೃ',
+    'English': 'A',
+    'Hindi': 'अ',
+    'Marathi': 'क्ष',
+    'Tamil': 'அ',
+    'Telugu': 'ఠ',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +83,102 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Top Bar: Back Button & Language Selector
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Back Button
+                          InkWell(
+                            onTap: () {
+                              if (Navigator.canPop(context)) {
+                                Navigator.pop(context);
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(24),
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back,
+                                color: _green,
+                              ),
+                            ),
+                          ),
+                          // Language Selector
+                          PopupMenuButton<String>(
+                            onSelected: (String value) {
+                              setState(() {
+                                _selectedLanguage = value;
+                              });
+                            },
+                            offset: const Offset(0, 48),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            itemBuilder: (BuildContext context) {
+                              return _languageIcons.keys.map((String lang) {
+                                return PopupMenuItem<String>(
+                                  value: lang,
+                                  child: Text(
+                                    lang,
+                                    style: TextStyle(
+                                      color: _selectedLanguage == lang ? _green : _textBlack,
+                                      fontWeight: _selectedLanguage == lang ? FontWeight.bold : FontWeight.normal,
+                                    ),
+                                  ),
+                                );
+                              }).toList();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: _green.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      _languageIcons[_selectedLanguage] ?? 'A',
+                                      style: const TextStyle(
+                                        color: _green,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _selectedLanguage,
+                                    style: const TextStyle(
+                                      color: _textBlack,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    color: _textBlack,
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
                       // Circular Logo
                       SizedBox(
                         width: 60,
