@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
 import 'package:krushi_setu/app/widgets/primary_button.dart';
-
+import 'package:krushi_setu/app/pages/digital_twin_step_2.dart';
 class DigitalTwinStep1Screen extends StatefulWidget {
   const DigitalTwinStep1Screen({super.key});
 
@@ -370,7 +370,12 @@ class _DigitalTwinStep1ScreenState extends State<DigitalTwinStep1Screen> {
                   PrimaryButton(
                     iconPosition: IconPosition.right,
                     onPressed: () {
-                      // TODO: Navigate to next step
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DigitalTwinStep2Screen(),
+                        ),
+                      );
                     },
                     text: 'Continue',
                   ),
