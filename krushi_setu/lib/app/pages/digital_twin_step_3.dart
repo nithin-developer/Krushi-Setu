@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
 import 'package:krushi_setu/app/widgets/primary_button.dart';
-import 'package:krushi_setu/app/pages/digital_twin_step_3.dart';
 
-class DigitalTwinStep2Screen extends StatefulWidget {
-  const DigitalTwinStep2Screen({super.key});
+class DigitalTwinStep3Screen extends StatefulWidget {
+  const DigitalTwinStep3Screen({super.key});
 
   @override
-  State<DigitalTwinStep2Screen> createState() => _DigitalTwinStep2ScreenState();
+  State<DigitalTwinStep3Screen> createState() => _DigitalTwinStep3ScreenState();
 }
 
-class _DigitalTwinStep2ScreenState extends State<DigitalTwinStep2Screen> {
+class _DigitalTwinStep3ScreenState extends State<DigitalTwinStep3Screen> {
   String _selectedLanguage = 'Kannada';
   final Map<String, String> _languageIcons = {
     'Kannada': 'ಕೃ',
@@ -22,16 +21,39 @@ class _DigitalTwinStep2ScreenState extends State<DigitalTwinStep2Screen> {
     'Telugu': 'ఠ',
   };
 
-  int _selectedLandSizeIndex = 0;
-  String _selectedUnit = 'Acre';
+  Set<int> _selectedWaterSources = {0};
 
-  final List<Map<String, dynamic>> _landSizes = [
-    {'title': 'Less than', 'subtitle': '1 Acre', 'highlight': true},
-    {'title': '1 - 2', 'subtitle': 'Acres', 'highlight': false},
-    {'title': '2 - 5', 'subtitle': 'Acres', 'highlight': false},
-    {'title': '5 - 10', 'subtitle': 'Acres', 'highlight': false},
-    {'title': '10 - 20', 'subtitle': 'Acres', 'highlight': false},
-    {'title': 'More than', 'subtitle': '20 Acres', 'highlight': false},
+  final List<Map<String, dynamic>> _waterSources = [
+    {
+      'title': 'Borewell',
+      'subtitle': 'Groundwater from your farm borewell.',
+      'image': 'assets/icons/borewell.png',
+    },
+    {
+      'title': 'Canal',
+      'subtitle': 'Water supplied through a canal.',
+      'image': 'assets/icons/canal.png',
+    },
+    {
+      'title': 'Rainfed',
+      'subtitle': 'Farming depends mainly on rainfall.',
+      'image': 'assets/icons/rain.png',
+    },
+    {
+      'title': 'Well',
+      'subtitle': 'Water from open well in the farm',
+      'image': 'assets/icons/well.png',
+    },
+    {
+      'title': 'Pond',
+      'subtitle': 'Water from farm pond or reservoir',
+      'image': 'assets/icons/pond.png',
+    },
+    {
+      'title': 'Drips / Sprinklers',
+      'subtitle': 'Using drip or sprinkler irrigation',
+      'image': 'assets/icons/drip.png',
+    },
   ];
 
   @override
@@ -181,9 +203,9 @@ class _DigitalTwinStep2ScreenState extends State<DigitalTwinStep2Screen> {
                 children: [
                   _buildStep(1, 'Location', isActive: true, isCompleted: true),
                   _buildStepLine(isCompleted: true),
-                  _buildStep(2, 'Land Size', isActive: true),
-                  _buildStepLine(),
-                  _buildStep(3, 'Water'),
+                  _buildStep(2, 'Land Size', isActive: true, isCompleted: true),
+                  _buildStepLine(isCompleted: true),
+                  _buildStep(3, 'Water', isActive: true),
                   _buildStepLine(),
                   _buildStep(4, 'Crops'),
                 ],
@@ -198,34 +220,50 @@ class _DigitalTwinStep2ScreenState extends State<DigitalTwinStep2Screen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Step 2 of 4',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    // Header Area with text and image
+                    Stack(
+                      children: [
+                        // Text content
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            right: 100.0,
+                            bottom: 20,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Step 3 of 4',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'What is your main\nwater source?',
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'This helps us suggest the best\ncrops and irrigation advice.',
+                                style: TextStyle(
+                                  color: Color(0xFF666666),
+                                  fontSize: 15,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'What is the size of your land?',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        height: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'This helps us give better crop and yield\nrecommendations.',
-                      style: TextStyle(
-                        color: Color(0xFF666666),
-                        fontSize: 15,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
 
                     // Map Image
                     Stack(
@@ -234,35 +272,18 @@ class _DigitalTwinStep2ScreenState extends State<DigitalTwinStep2Screen> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(20),
                           child: Image.asset(
-                            'assets/images/land.png',
+                            'assets/images/borewell.png',
                             height: 160,
                             width: double.infinity,
                             fit: BoxFit.cover,
                           ),
                         ),
-                        // The asset might already have the dashed lines and markers.
-                        // We will add the text just in case.
-                        const Text(
-                          'Your Land',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black45,
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                        ),
                       ],
                     ),
-                    const SizedBox(height: 24),
 
+                    const SizedBox(height: 24),
                     const Text(
-                      'Select your land size',
+                      'Select your main water sources (you can select multiple options)',
                       style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 16,
@@ -271,7 +292,7 @@ class _DigitalTwinStep2ScreenState extends State<DigitalTwinStep2Screen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Grid of Land Sizes
+                    // Grid of Water Sources
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -280,26 +301,33 @@ class _DigitalTwinStep2ScreenState extends State<DigitalTwinStep2Screen> {
                             crossAxisCount: 2,
                             crossAxisSpacing: 12,
                             mainAxisSpacing: 12,
-                            childAspectRatio: 2.5,
+                            childAspectRatio: 1.5,
                           ),
-                      itemCount: _landSizes.length,
+                      itemCount: _waterSources.length,
                       itemBuilder: (context, index) {
-                        final item = _landSizes[index];
-                        final isSelected = _selectedLandSizeIndex == index;
+                        final item = _waterSources[index];
+                        final isSelected = _selectedWaterSources.contains(index);
                         return GestureDetector(
-                          onTap: () =>
-                              setState(() => _selectedLandSizeIndex = index),
+                          onTap: () {
+                            setState(() {
+                              if (_selectedWaterSources.contains(index)) {
+                                _selectedWaterSources.remove(index);
+                              } else {
+                                _selectedWaterSources.add(index);
+                              }
+                            });
+                          },
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? const Color(0xFFF2F7F4)
                                   : Colors.white,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: isSelected
                                     ? AppColors.primary
                                     : const Color(0xFFF0F0F0),
+                                width: isSelected ? 1.5 : 1,
                               ),
                               boxShadow: [
                                 if (!isSelected)
@@ -310,180 +338,142 @@ class _DigitalTwinStep2ScreenState extends State<DigitalTwinStep2Screen> {
                                   ),
                               ],
                             ),
-                            child: Row(
+                            child: Stack(
                               children: [
-                                // Isometric icon placeholder
-                                SizedBox(
-                                  width: 30,
-                                  height: 30,
-                                  child: _buildIsometricIcon(index),
-                                ),
-                                const SizedBox(width: 18),
-                                Expanded(
+                                Padding(
+                                  padding: const EdgeInsets.all(12.0),
                                   child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text(
-                                        item['title'],
-                                        style: TextStyle(
-                                          color: AppColors.textPrimary,
-                                          fontSize:
-                                              item['highlight'] == true &&
-                                                  !isSelected
-                                              ? 13
-                                              : 13,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          // Image
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            child: Image.asset(
+                                              item['image'],
+                                              width: 50,
+                                              height: 50,
+                                              fit: BoxFit.contain,
+                                              errorBuilder:
+                                                  (
+                                                    context,
+                                                    error,
+                                                    stackTrace,
+                                                  ) => Container(
+                                                    width: 50,
+                                                    height: 50,
+                                                    color: Colors.grey[100],
+                                                    child: const Icon(
+                                                      Icons.water,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          // Title
+                                          Expanded(
+                                            child: Text(
+                                              item['title'],
+                                              style: TextStyle(
+                                                color: isSelected
+                                                    ? AppColors.primary
+                                                    : AppColors.textPrimary,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
+                                      const SizedBox(height: 8),
                                       Text(
                                         item['subtitle'],
-                                        style: TextStyle(
-                                          color: const Color(0xFF666666),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.normal,
+                                        style: const TextStyle(
+                                          color: Color(0xFF666666),
+                                          fontSize: 13,
+                                          height: 1.3,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                if (isSelected)
-                                  const Icon(
-                                    Icons.check_circle,
-                                    color: AppColors.primary,
-                                    size: 18,
-                                  ),
+                                // Checkmark or Unchecked circle
+                                Positioned(
+                                  top: 12,
+                                  right: 12,
+                                  child: isSelected
+                                      ? const Icon(
+                                          Icons.check_circle,
+                                          color: AppColors.primary,
+                                          size: 20,
+                                        )
+                                      : Container(
+                                          width: 20,
+                                          height: 20,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: const Color(0xFFE0E0E0),
+                                              width: 1.5,
+                                            ),
+                                          ),
+                                        ),
+                                ),
                               ],
                             ),
                           ),
                         );
                       },
                     ),
+
                     const SizedBox(height: 24),
 
-                    const Text(
-                      'Or enter exact size',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    // Info Banner
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF2F7F4),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.lightbulb_outline,
+                              color: AppColors.primary,
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text(
+                              'You can update this later from your profile settings.',
+                              style: TextStyle(
+                                color: Color(0xFF444444),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-
-                    // Exact size input
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF9F9F9),
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(16),
-                                bottomLeft: Radius.circular(16),
-                              ),
-                              border: Border.all(
-                                color: const Color(0xFFF0F0F0),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 16),
-                                const Icon(
-                                  Icons.map_outlined,
-                                  color: AppColors.primary,
-                                  size: 24,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: TextField(
-                                    decoration: const InputDecoration(
-                                      hintText: 'Enter land size',
-                                      hintStyle: TextStyle(
-                                        color: Color(0xFF888888),
-                                        fontSize: 15,
-                                      ),
-                                      border: InputBorder.none,
-                                    ),
-                                    keyboardType: TextInputType.number,
-                                    onChanged: (val) {
-                                      if (val.isNotEmpty) {
-                                        setState(() {
-                                          _selectedLandSizeIndex =
-                                              -1; // Deselect grid
-                                        });
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 56,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(16),
-                              bottomRight: Radius.circular(16),
-                            ),
-                            border: Border(
-                              top: BorderSide(color: Color(0xFFF0F0F0)),
-                              bottom: BorderSide(color: Color(0xFFF0F0F0)),
-                              right: BorderSide(color: Color(0xFFF0F0F0)),
-                            ),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value:
-                                  [
-                                    'Acre',
-                                    'Hectare',
-                                    'Sq ft',
-                                    'Guntas',
-                                    'Cents',
-                                  ].contains(_selectedUnit)
-                                  ? _selectedUnit
-                                  : 'Acre',
-                              icon: const Icon(
-                                Icons.keyboard_arrow_down,
-                                color: AppColors.textPrimary,
-                              ),
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              items:
-                                  [
-                                    'Acre',
-                                    'Hectare',
-                                    'Sq ft',
-                                    'Guntas',
-                                    'Cents',
-                                  ].map((String unit) {
-                                    return DropdownMenuItem<String>(
-                                      value: unit,
-                                      child: Text(unit),
-                                    );
-                                  }).toList(),
-                              onChanged: (String? newValue) {
-                                if (newValue != null) {
-                                  setState(() {
-                                    _selectedUnit = newValue;
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -500,12 +490,7 @@ class _DigitalTwinStep2ScreenState extends State<DigitalTwinStep2Screen> {
                   PrimaryButton(
                     iconPosition: IconPosition.right,
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DigitalTwinStep3Screen(),
-                        ),
-                      );
+                      // TODO: Navigate to step 4
                     },
                     text: 'Continue',
                   ),
@@ -542,44 +527,6 @@ class _DigitalTwinStep2ScreenState extends State<DigitalTwinStep2Screen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildIsometricIcon(int index) {
-    // Generate different divisions based on index to mimic the image
-    int divisions = 1;
-    if (index >= 1 && index <= 2) divisions = 2; // 2x2 grid
-    if (index >= 3) divisions = 3; // 3x3 grid
-
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        color: index % 2 == 0
-            ? const Color(0xFF8BC34A)
-            : const Color(0xFF7CB342),
-        border: Border.all(color: const Color(0xFF558B2F), width: 1),
-      ),
-      child: divisions > 1
-          ? GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: divisions,
-              ),
-              itemCount: divisions * divisions,
-              itemBuilder: (context, i) {
-                return Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: const Color(0xFF558B2F),
-                      width: 0.5,
-                    ),
-                  ),
-                );
-              },
-            )
-          : null,
     );
   }
 
