@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:krushi_setu/app/theme/app_colors.dart';
 import 'register_screen.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,9 +12,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  static const _green = Color(0xFF0E7A3B);
-  static const _textBlack = Color(0xFF1A1A1A);
-
   bool _obscurePassword = true;
   String _selectedLanguage = 'Kannada';
   final Map<String, String> _languageIcons = {
@@ -104,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               child: const Icon(
                                 Icons.arrow_back,
-                                color: _green,
+                                color: AppColors.primary,
                               ),
                             ),
                           ),
@@ -126,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: Text(
                                     lang,
                                     style: TextStyle(
-                                      color: _selectedLanguage == lang ? _green : _textBlack,
+                                      color: _selectedLanguage == lang ? AppColors.primary : AppColors.textPrimary,
                                       fontWeight: _selectedLanguage == lang ? FontWeight.bold : FontWeight.normal,
                                     ),
                                   ),
@@ -145,13 +143,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: _green.withOpacity(0.15),
+                                      color: AppColors.primary.withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       _languageIcons[_selectedLanguage] ?? 'A',
                                       style: const TextStyle(
-                                        color: _green,
+                                        color: AppColors.primary,
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -161,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Text(
                                     _selectedLanguage,
                                     style: const TextStyle(
-                                      color: _textBlack,
+                                      color: AppColors.textPrimary,
                                       fontSize: 15,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -169,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   const SizedBox(width: 4),
                                   const Icon(
                                     Icons.keyboard_arrow_down_rounded,
-                                    color: _textBlack,
+                                    color: AppColors.textPrimary,
                                     size: 20,
                                   ),
                                 ],
@@ -191,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Text.rich(
                         TextSpan(
                           style: TextStyle(
-                            color: _textBlack,
+                            color: AppColors.textPrimary,
                             fontSize: 30,
                             fontWeight: FontWeight.w500,
                             height: 1.2,
@@ -202,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextSpan(
                               text: 'Back!',
                               style: TextStyle(
-                                color: _green,
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -262,7 +260,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             padding: EdgeInsets.all(12.0),
                             child: Icon(
                               Icons.email_outlined,
-                              color: _textBlack,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                           border: OutlineInputBorder(
@@ -279,7 +277,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: _green),
+                            borderSide: const BorderSide(color: AppColors.primary),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             vertical: 16,
@@ -309,7 +307,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           prefixIcon: const Padding(
                             padding: EdgeInsets.all(12.0),
-                            child: Icon(Icons.lock_outline, color: _textBlack),
+                            child: Icon(Icons.lock_outline, color: AppColors.textPrimary),
                           ),
 
                           suffixIcon:  IconButton(
@@ -340,7 +338,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: _green),
+                            borderSide: const BorderSide(color: AppColors.primary),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             vertical: 16,
@@ -363,7 +361,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: const Text(
                             'Forgot Password?',
                             style: TextStyle(
-                              color: _green,
+                              color: AppColors.primary,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -497,7 +495,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 const Text(
                                   'Continue with Google',
                                   style: TextStyle(
-                                    color: _textBlack,
+                                    color: AppColors.textPrimary,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -523,7 +521,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               TextSpan(
                                 text: 'Register',
                                 style: const TextStyle(
-                                  color: _green,
+                                  color: AppColors.primary,
                                   fontWeight: FontWeight.w600,
                                 ),
                                 recognizer: TapGestureRecognizer()

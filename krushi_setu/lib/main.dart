@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:krushi_setu/pages/splash_screen.dart';
+
+import 'package:krushi_setu/app/pages/splash_screen.dart';
+import 'package:krushi_setu/app/theme/app_theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,11 +15,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Krushi Setu',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F6536)),
-        useMaterial3: true,
-        textTheme: GoogleFonts.poppinsTextTheme(),
-      ),
+      theme: AppTheme.light(),
       home: const SplashScreen(),
     );
   }

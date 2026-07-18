@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:krushi_setu/app/theme/app_colors.dart';
 import 'auth_home_screen.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
@@ -11,12 +12,6 @@ class LanguageSelectionScreen extends StatefulWidget {
 }
 
 class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
-  static const _green = Color(0xFF0E7A3B);
-  static const _textBlack = Color(0xFF1A1A1A);
-  static const _mutedText = Color.fromARGB(255, 85, 84, 84);
-  static const _cardBg = Color(0xFFF6F6F6);
-  static const _cardBorder = Color(0xFFE8E8E8);
-
   String _selectedLanguage = 'Kannada';
 
   // Removed `const` to fix Flutter web TypeError:
@@ -91,7 +86,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                         const Text.rich(
                           TextSpan(
                             style: TextStyle(
-                              color: _textBlack,
+                              color: AppColors.textPrimary,
                               fontSize: 26,
                               fontWeight: FontWeight.w500,
                               height: 1.12,
@@ -101,7 +96,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                               TextSpan(
                                 text: 'Language',
                                 style: TextStyle(
-                                  color: _green,
+                                  color: AppColors.primary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -114,7 +109,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                         const Text(
                           'Select your preferred language\nto get started',
                           style: TextStyle(
-                            color: _mutedText,
+                            color: AppColors.textSecondary,
                             fontSize: 15,
                             fontWeight: FontWeight.w400,
                             letterSpacing: -0.2,
@@ -254,18 +249,18 @@ class _LanguageTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected
                 ? Colors.white
-                : _LanguageSelectionScreenState._cardBg,
+                : AppColors.background,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: selected
-                  ? _LanguageSelectionScreenState._green
-                  : _LanguageSelectionScreenState._cardBorder,
+                  ? AppColors.primary
+                  : AppColors.border,
               width: selected ? 2.0 : 1.2,
             ),
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: _LanguageSelectionScreenState._green.withValues(
+                      color: AppColors.primary.withValues(
                         alpha: 0.08,
                       ),
                       blurRadius: 12,
@@ -301,7 +296,7 @@ class _LanguageTile extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: selected
-                        ? _LanguageSelectionScreenState._green
+                        ? AppColors.primary
                         : const Color(0xFF2A2A2A),
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
@@ -323,7 +318,7 @@ class _LanguageTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: selected
-                            ? _LanguageSelectionScreenState._green
+                            ? AppColors.primary
                             : const Color(0xFF1E1E1E),
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -337,8 +332,8 @@ class _LanguageTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: selected
-                            ? _LanguageSelectionScreenState._green
-                            : _LanguageSelectionScreenState._mutedText,
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         height: 1,
@@ -355,7 +350,7 @@ class _LanguageTile extends StatelessWidget {
                   width: 28,
                   height: 28,
                   decoration: const BoxDecoration(
-                    color: _LanguageSelectionScreenState._green,
+                    color: AppColors.primary,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.check, color: Colors.white, size: 20),

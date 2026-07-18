@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:krushi_setu/pages/login_screen.dart';
+import 'package:krushi_setu/app/theme/app_colors.dart';
+import 'package:krushi_setu/app/pages/login_screen.dart';
 
 class AuthHomeScreen extends StatelessWidget {
   const AuthHomeScreen({super.key});
-
-  static const _green = Color(0xFF0E7A3B);
-  static const _textBlack = Color(0xFF1A1A1A);
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +71,7 @@ class AuthHomeScreen extends StatelessWidget {
                       const Text.rich(
                         TextSpan(
                           style: TextStyle(
-                            color: _textBlack,
+                            color: AppColors.textPrimary,
                             fontSize: 26,
                             fontWeight: FontWeight.w500,
                             height: 1.2,
@@ -84,7 +82,7 @@ class AuthHomeScreen extends StatelessWidget {
                             TextSpan(
                               text: 'Krushi Setu',
                               style: TextStyle(
-                                color: _green,
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 1.0,
                                 fontSize: 30,
@@ -97,7 +95,7 @@ class AuthHomeScreen extends StatelessWidget {
                       const Text.rich(
                         TextSpan(
                           style: TextStyle(
-                            color: _textBlack,
+                            color: AppColors.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                             height: 1.4,
@@ -109,7 +107,7 @@ class AuthHomeScreen extends StatelessWidget {
                             TextSpan(
                               text: 'your language',
                               style: TextStyle(
-                                color: _green,
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -138,7 +136,7 @@ class AuthHomeScreen extends StatelessWidget {
                     const Text(
                       'Continue with',
                       style: TextStyle(
-                        color: _textBlack,
+                        color: AppColors.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),
@@ -158,7 +156,7 @@ class AuthHomeScreen extends StatelessWidget {
                     //   text: 'Continue with Phone',
                     //   iconWidget: const Icon(
                     //     Icons.phone_outlined,
-                    //     color: _green,
+                    //     color: AppColors.primary,
                     //     size: 24,
                     //   ),
                     //   onTap: () {},
@@ -170,7 +168,7 @@ class AuthHomeScreen extends StatelessWidget {
                       text: 'Continue with Email',
                       iconWidget: const Icon(
                         Icons.email_outlined,
-                        color: _green,
+                        color: AppColors.primary,
                         size: 24,
                       ),
                       onTap: () {
@@ -196,7 +194,7 @@ class AuthHomeScreen extends StatelessWidget {
                           TextSpan(
                             text: 'Terms of Service',
                             style: TextStyle(
-                              color: _green,
+                              color: AppColors.primary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -204,7 +202,7 @@ class AuthHomeScreen extends StatelessWidget {
                           TextSpan(
                             text: 'Privacy Policy',
                             style: TextStyle(
-                              color: _green,
+                              color: AppColors.primary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -266,7 +264,7 @@ class _AuthButton extends StatelessWidget {
               Text(
                 text,
                 style: const TextStyle(
-                  color: AuthHomeScreen._textBlack,
+                  color: AppColors.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:krushi_setu/pages/language_selection_screen.dart';
+import 'package:krushi_setu/app/pages/language_selection_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

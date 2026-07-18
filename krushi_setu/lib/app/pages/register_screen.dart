@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
+import 'package:krushi_setu/app/theme/app_colors.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -10,9 +11,6 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  static const _green = Color(0xFF0E7A3B);
-  static const _textBlack = Color(0xFF1A1A1A);
-
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreedToTerms = true;
@@ -94,7 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ),
                                   child: const Icon(
                                     Icons.arrow_back,
-                                    color: _green,
+                                    color: AppColors.primary,
                                   ),
                                 ),
                               ),
@@ -116,7 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       child: Text(
                                         lang,
                                         style: TextStyle(
-                                          color: _selectedLanguage == lang ? _green : _textBlack,
+                                          color: _selectedLanguage == lang ? AppColors.primary : AppColors.textPrimary,
                                           fontWeight: _selectedLanguage == lang ? FontWeight.bold : FontWeight.normal,
                                         ),
                                       ),
@@ -135,13 +133,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: _green.withOpacity(0.15),
+                                          color: AppColors.primary.withValues(alpha: 0.15),
                                           borderRadius: BorderRadius.circular(6),
                                         ),
                                         child: Text(
                                           _languageIcons[_selectedLanguage] ?? 'A',
                                           style: const TextStyle(
-                                            color: _green,
+                                            color: AppColors.primary,
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -151,7 +149,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       Text(
                                         _selectedLanguage,
                                         style: const TextStyle(
-                                          color: _textBlack,
+                                          color: AppColors.textPrimary,
                                           fontSize: 15,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -159,7 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       const SizedBox(width: 4),
                                       const Icon(
                                         Icons.keyboard_arrow_down_rounded,
-                                        color: _textBlack,
+                                        color: AppColors.textPrimary,
                                         size: 20,
                                       ),
                                     ],
@@ -179,7 +177,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const Text.rich(
                             TextSpan(
                               style: TextStyle(
-                                color: _textBlack,
+                                color: AppColors.textPrimary,
                                 fontSize: 30,
                                 fontWeight: FontWeight.w400,
                                 height: 1.2,
@@ -190,7 +188,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 TextSpan(
                                   text: 'Account',
                                   style: TextStyle(
-                                    color: _green,
+                                    color: AppColors.primary,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -295,7 +293,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 _agreedToTerms = value ?? false;
                               });
                             },
-                            activeColor: _green,
+                            activeColor: AppColors.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(4),
                             ),
@@ -308,21 +306,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             TextSpan(
                               text: 'I agree to the ',
                               style: const TextStyle(
-                                color: _textBlack,
+                                color: AppColors.textPrimary,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),
                               children: [
                                 TextSpan(
                                   text: 'Terms of Service',
-                                  style: const TextStyle(color: _green),
+                                  style: const TextStyle(color: AppColors.primary),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {},
                                 ),
                                 const TextSpan(text: ' and '),
                                 TextSpan(
                                   text: 'Privacy Policy',
-                                  style: const TextStyle(color: _green),
+                                  style: const TextStyle(color: AppColors.primary),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {},
                                 ),
@@ -416,7 +414,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             TextSpan(
                               text: 'Login',
                               style: const TextStyle(
-                                color: _green,
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.w600,
                               ),
                               recognizer: TapGestureRecognizer()
@@ -455,7 +453,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Text(
           label,
           style: TextStyle(
-            color: isLabelGreen ? _green : const Color(0xFF4A4A4A),
+            color: isLabelGreen ? AppColors.primary : const Color(0xFF4A4A4A),
             fontSize: 14,
             fontWeight: isLabelGreen ? FontWeight.w600 : FontWeight.w500,
           ),
@@ -478,7 +476,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(12.0),
-                child: Icon(icon, color: _textBlack),
+                child: Icon(icon, color: AppColors.textPrimary),
               ),
               suffixIcon: isPassword
                   ? IconButton(
