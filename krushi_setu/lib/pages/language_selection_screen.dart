@@ -135,7 +135,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                 padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                 physics: const BouncingScrollPhysics(),
                 itemCount: _languages.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final language = _languages[index];
                   final isSelected = _selectedLanguage == language.name;
