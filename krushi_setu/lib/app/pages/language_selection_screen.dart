@@ -191,7 +191,7 @@ class _HeaderImage extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             Image.asset(
-              'assets/language_screen_bg.png',
+              'assets/backgrounds/language_screen_bg.png',
               fit: BoxFit.cover,
               // Shift image to show the wheat stalk on the right
               alignment: const Alignment(0.35, -0.65),

@@ -52,7 +52,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       width: double.infinity,
                       height: 520,
                       child: Image.asset(
-                        'assets/register_bg.png',
+                        'assets/backgrounds/register_bg.png',
                         fit: BoxFit.cover,
                         alignment: Alignment.topRight,
                         errorBuilder: (context, error, stackTrace) {

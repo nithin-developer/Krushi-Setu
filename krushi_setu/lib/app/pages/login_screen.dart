@@ -45,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(
-                    'assets/login_with_email_bg.png',
+                    'assets/backgrounds/login_with_email_bg.png',
                     fit: BoxFit.cover,
                     alignment: Alignment.topCenter,
                   ),

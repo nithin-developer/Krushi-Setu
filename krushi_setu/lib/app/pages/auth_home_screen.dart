@@ -29,7 +29,7 @@ class AuthHomeScreen extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(
-                    'assets/auth_bg1112.png',
+                    'assets/backgrounds/auth_bg.png',
                     fit: BoxFit.cover,
                     alignment: Alignment.topCenter,
                   ),
