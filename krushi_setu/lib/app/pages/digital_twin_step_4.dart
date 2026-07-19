@@ -292,7 +292,7 @@ class _DigitalTwinStep4ScreenState extends State<DigitalTwinStep4Screen> {
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(20),
                                 child: Image.asset(
-                                  'assets/images/borewell.png',
+                                  'assets/images/crops.png',
                                   height: 160,
                                   width: double.infinity,
                                   fit: BoxFit.cover,

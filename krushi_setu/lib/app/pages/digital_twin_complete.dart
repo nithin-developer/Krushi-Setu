@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
 import 'package:krushi_setu/app/widgets/primary_button.dart';
+import 'package:krushi_setu/app/pages/dashboard_screen.dart';
 
 class DigitalTwinCompleteScreen extends StatefulWidget {
   const DigitalTwinCompleteScreen({super.key});
@@ -505,7 +506,12 @@ class _DigitalTwinCompleteScreenState extends State<DigitalTwinCompleteScreen> {
       text: 'Go to Dashboard',
       iconPosition: IconPosition.right,
       onPressed: () {
-        // TODO: Navigate to dashboard
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const DashboardScreen(),
+          ),
+        );
       },
     );
   }
