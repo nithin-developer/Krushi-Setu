@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:krushi_setu/app/pages/language_selection_screen.dart';
+import 'package:krushi_setu/app/pages/dashboard_screen.dart';
+import 'package:krushi_setu/features/auth/providers/auth_provider.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   static const _designWidth = 853.0;
   static const _designHeight = 1844.0;
   static const _brandGreen = Color(0xff006b0b);
@@ -18,8 +21,18 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Future.delayed(const Duration(seconds: 3), () {
       if (!mounted) return;
+      
+      final authState = ref.read(authStateProvider);
+      Widget nextScreen = const LanguageSelectionScreen();
+      
+      authState.whenData((user) {
+        if (user != null) {
+          nextScreen = const DashboardScreen();
+        }
+      });
+      
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LanguageSelectionScreen()),
+        MaterialPageRoute(builder: (_) => nextScreen),
       );
     });
   }

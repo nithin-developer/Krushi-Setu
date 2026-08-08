@@ -66,5 +66,15 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<dict>
+		<key>CLIENT_ID</key>
+		<string>235362183473-69rgaie77vtfllrugp06qhsmqb5v83nr.apps.googleusercontent.com</string>
+		<key>REVERSED_CLIENT_ID</key>
+		<string>com.googleusercontent.apps.235362183473-69rgaie77vtfllrugp06qhsmqb5v83nr</string>
+		<key>PLIST_VERSION</key>
+		<string>1</string>
+		<key>BUNDLE_ID</key>
+		<string>com.nithink.krushiSetu</string>
+	</dict>
 </dict>
 </plist>

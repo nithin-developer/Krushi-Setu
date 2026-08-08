@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+motor
+pydantic
+pydantic-settings
+pwdlib[argon2]
+python-jose[cryptography]
+google-auth
+python-multipart
+emails

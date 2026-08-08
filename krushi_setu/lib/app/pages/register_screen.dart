@@ -2,17 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:krushi_setu/features/auth/providers/auth_provider.dart';
+import 'package:krushi_setu/app/pages/dashboard_screen.dart';
 import 'package:krushi_setu/app/widgets/primary_button.dart';
 import 'digital_twin_setup_screen.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreedToTerms = true;
@@ -26,9 +29,86 @@ class _RegisterScreenState extends State<RegisterScreen> {
     'Telugu': 'ఠ',
   };
 
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleRegister() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (!_agreedToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You must agree to the Terms of Service')),
+      );
+      return;
+    }
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all required fields')),
+      );
+      return;
+    }
+
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email address')),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match')),
+      );
+      return;
+    }
+
+    try {
+      await ref.read(authStateProvider.notifier).register(
+        fullName: name,
+        email: email,
+        password: password,
+        phoneNumber: phone.isEmpty ? null : phone,
+      );
+      if (mounted) {
+        // Registration success, navigate to dashboard
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
+    final authState = ref.watch(authStateProvider);
+    final isLoading = authState.isLoading;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
@@ -233,6 +313,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                     _buildTextField(
+                      controller: _nameController,
                       label: 'Full Name',
                       hint: 'Enter your full name',
                       icon: Icons.person_outline,
@@ -241,6 +322,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
+                      controller: _emailController,
                       label: 'Email Address',
                       hint: 'Enter your email',
                       icon: Icons.email_outlined,
@@ -248,6 +330,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
+                      controller: _phoneController,
                       label: 'Phone Number',
                       hint: 'Enter your phone number',
                       icon: Icons.phone_outlined,
@@ -255,6 +338,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
+                      controller: _passwordController,
                       label: 'Password',
                       hint: 'Create a password',
                       icon: Icons.lock_outline,
@@ -268,6 +352,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
+                      controller: _confirmPasswordController,
                       label: 'Confirm Password',
                       hint: 'Confirm your password',
                       icon: Icons.lock_outline,
@@ -338,14 +423,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // Register Button
                     PrimaryButton(
                       text: 'Register',
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const DigitalTwinSetupScreen(),
-                          ),
-                        );
-                      },
+                      isLoading: isLoading,
+                      onPressed: _handleRegister,
                     ),
 
                     const SizedBox(height: 24),
@@ -390,6 +469,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required String label,
     required String hint,
     required IconData icon,
+    TextEditingController? controller,
     TextInputType keyboardType = TextInputType.text,
     bool isPassword = false,
     bool obscureText = false,
@@ -415,6 +495,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             border: Border.all(color: const Color(0xFFE8E8E8)),
           ),
           child: TextField(
+            controller: controller,
             keyboardType: keyboardType,
             obscureText: obscureText,
             decoration: InputDecoration(

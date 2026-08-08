@@ -3,9 +3,38 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
 import 'package:krushi_setu/app/pages/login_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:krushi_setu/features/auth/providers/auth_provider.dart';
+import 'package:krushi_setu/app/pages/dashboard_screen.dart';
 
-class AuthHomeScreen extends StatelessWidget {
+class AuthHomeScreen extends ConsumerStatefulWidget {
   const AuthHomeScreen({super.key});
+
+  @override
+  ConsumerState<AuthHomeScreen> createState() => _AuthHomeScreenState();
+}
+
+class _AuthHomeScreenState extends ConsumerState<AuthHomeScreen> {
+  Future<void> _handleGoogleLogin() async {
+    try {
+      await ref.read(authStateProvider.notifier).loginWithGoogle();
+      if (mounted) {
+        final authState = ref.read(authStateProvider);
+        if (authState.value != null) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const DashboardScreen()),
+            (route) => false,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +176,7 @@ class AuthHomeScreen extends StatelessWidget {
                     _AuthButton(
                       text: 'Continue with Google',
                       iconWidget: _buildGoogleIcon(),
-                      onTap: () {},
+                      onTap: _handleGoogleLogin,
                     ),
                     const SizedBox(height: 16),
                     
