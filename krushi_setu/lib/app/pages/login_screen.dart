@@ -7,6 +7,7 @@ import 'package:krushi_setu/app/widgets/primary_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:krushi_setu/features/auth/providers/auth_provider.dart';
 import 'package:krushi_setu/app/pages/dashboard_screen.dart';
+import 'package:krushi_setu/app/pages/digital_twin_setup_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -60,11 +61,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await ref.read(authStateProvider.notifier).login(email, password);
       if (mounted) {
-        // If successful, the token is saved, go to Dashboard
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-        );
+        final user = ref.read(authStateProvider).value;
+        if (user != null && !user.profileCompleted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const DigitalTwinSetupScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -79,10 +87,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await ref.read(authStateProvider.notifier).loginWithGoogle();
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-        );
+        final user = ref.read(authStateProvider).value;
+        if (user != null && !user.profileCompleted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const DigitalTwinSetupScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

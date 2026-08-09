@@ -1,43 +1,215 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
 import 'package:krushi_setu/app/widgets/primary_button.dart';
 import 'package:krushi_setu/app/pages/digital_twin_step_2.dart';
-class DigitalTwinStep1Screen extends StatefulWidget {
+import 'package:krushi_setu/app/providers/digital_twin_provider.dart';
+
+class DigitalTwinStep1Screen extends ConsumerStatefulWidget {
   const DigitalTwinStep1Screen({super.key});
 
   @override
-  State<DigitalTwinStep1Screen> createState() => _DigitalTwinStep1ScreenState();
+  ConsumerState<DigitalTwinStep1Screen> createState() => _DigitalTwinStep1ScreenState();
 }
 
-class _DigitalTwinStep1ScreenState extends State<DigitalTwinStep1Screen> {
+
+class _DigitalTwinStep1ScreenState extends ConsumerState<DigitalTwinStep1Screen> {
   String _selectedLanguage = 'Kannada';
   final Map<String, String> _languageIcons = {
-    'Kannada': 'ಕೃ',
-    'English': 'A',
-    'Hindi': 'अ',
-    'Marathi': 'क्ष',
-    'Tamil': 'அ',
-    'Telugu': 'ఠ',
+    'Kannada': 'ಕೃ', 'English': 'A', 'Hindi': 'अ', 'Marathi': 'क्ष', 'Tamil': 'அ', 'Telugu': 'ఠ',
   };
 
-  String? _selectedState = 'Karnataka';
-  String? _selectedDistrict = 'Mandya';
-  String? _selectedTaluk = 'Maddur';
-  String? _selectedVillage = 'Kaginahalli';
+  List<String> _states = [];
+  Map<String, List<String>> _stateToDistricts = {};
+  List<String> _districts = [];
 
-  List<String> get _states => ['Karnataka', 'Maharashtra', 'Gujarat', 'Tamil Nadu', 'Kerala'];
-  List<String> get _districts => ['Mandya', 'Mysuru', 'Hassan', 'Bengaluru', 'Tumakuru'];
-  List<String> get _taluks => ['Maddur', 'Malavalli', 'Srirangapatna', 'Pandavapura', 'Krishnarajpet'];
-  List<String> get _villages => ['Kaginahalli', 'Besagarahalli', 'Koppa', 'Mellahalli', 'Bharathinagara'];
+  @override
+  void initState() {
+    super.initState();
+    _fetchLocations();
+  }
+
+  Future<void> _fetchLocations() async {
+    try {
+      final response = await http.get(Uri.parse('https://raw.githubusercontent.com/sab99r/Indian-States-And-Districts/master/states-and-districts.json'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List<dynamic> statesData = data['states'];
+        List<String> loadedStates = [];
+        Map<String, List<String>> loadedDistricts = {};
+        for (var stateItem in statesData) {
+          final stateName = stateItem['state'];
+          loadedStates.add(stateName);
+          final districts = List<String>.from(stateItem['districts'] ?? []);
+          loadedDistricts[stateName] = districts;
+        }
+        if (mounted) {
+          setState(() {
+            _states = loadedStates;
+            _stateToDistricts = loadedDistricts;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
+  void _onStateChanged(String? stateName) {
+    if (stateName == null) return;
+    setState(() {
+      _districts = _stateToDistricts[stateName] ?? [];
+    });
+    ref.read(digitalTwinProvider.notifier).updateLocation(state: stateName, district: null, taluk: null, village: null);
+  }
+
+  void _onDistrictChanged(String? districtName) {
+    if (districtName == null) return;
+    final state = ref.read(digitalTwinProvider);
+    ref.read(digitalTwinProvider.notifier).updateLocation(state: state.state, district: districtName, taluk: null, village: null);
+  }
+
+  void _onTalukChanged(String? talukName) {
+    if (talukName == null) return;
+    final state = ref.read(digitalTwinProvider);
+    ref.read(digitalTwinProvider.notifier).updateLocation(state: state.state, district: state.district, taluk: talukName, village: null);
+  }
+
+  void _onVillageChanged(String? villageName) {
+    if (villageName == null) return;
+    final state = ref.read(digitalTwinProvider);
+    ref.read(digitalTwinProvider.notifier).updateLocation(state: state.state, district: state.district, taluk: state.taluk, village: villageName);
+    _fetchBoundaries(ref.read(digitalTwinProvider));
+  }
+
+  final MapController _mapController = MapController();
+
+  bool _isLocating = false;
+
+  Future<void> _findMyLocation() async {
+    setState(() {
+      _isLocating = true;
+    });
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Location permissions are denied');
+        }
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+
+      final lat = position.latitude;
+      final lon = position.longitude;
+
+      // Reverse geocode
+      final notifier = ref.read(digitalTwinProvider.notifier);
+      
+      final res = await notifier.reverseGeocode(lat, lon);
+      if (res != null) {
+        final address = res['address'] ?? {};
+        notifier.updateLocation(
+          state: address['state'] ?? _states.first,
+          district: address['state_district'] ?? address['county'] ?? _districts.first,
+          taluk: address['city'] ?? address['town'],
+          village: address['village'] ?? address['suburb'],
+          latitude: lat,
+          longitude: lon,
+        );
+        _mapController.move(LatLng(lat, lon), 14.0);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to get location: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLocating = false;
+      });
+    }
+  }
+
+  Future<void> _fetchBoundaries(DigitalTwinState state) async {
+    if (state.state != null && state.district != null && state.taluk != null && state.village != null) {
+      final query = '${state.village}, ${state.taluk}, ${state.district}, ${state.state}';
+      final notifier = ref.read(digitalTwinProvider.notifier);
+      final res = await notifier.searchLocationGeojson(query);
+      if (res != null) {
+        final lat = double.tryParse(res['lat'] ?? '0') ?? 0;
+        final lon = double.tryParse(res['lon'] ?? '0') ?? 0;
+        final geojson = res['geojson'];
+        notifier.updateLocation(
+          state: state.state,
+          district: state.district,
+          taluk: state.taluk,
+          village: state.village,
+          latitude: lat,
+          longitude: lon,
+          polygonGeojson: geojson != null ? [geojson] : null,
+        );
+        _mapController.move(LatLng(lat, lon), 14.0);
+      }
+    }
+  }
+
+  List<Polygon> _buildPolygons(DigitalTwinState state) {
+    if (state.polygonGeojson == null || state.polygonGeojson!.isEmpty) return [];
+    
+    List<Polygon> polygons = [];
+    for (var geojson in state.polygonGeojson!) {
+      if (geojson['type'] == 'Polygon') {
+        List<LatLng> points = [];
+        for (var point in geojson['coordinates'][0]) {
+           // GeoJSON is [lon, lat]
+           points.add(LatLng(point[1].toDouble(), point[0].toDouble()));
+        }
+        polygons.add(Polygon(
+          points: points,
+          color: AppColors.primary.withValues(alpha: 0.3),
+          borderColor: AppColors.primary,
+          borderStrokeWidth: 2,
+        ));
+      } else if (geojson['type'] == 'MultiPolygon') {
+         for (var polygon in geojson['coordinates']) {
+            List<LatLng> points = [];
+            for (var point in polygon[0]) {
+               points.add(LatLng(point[1].toDouble(), point[0].toDouble()));
+            }
+            polygons.add(Polygon(
+              points: points,
+              color: AppColors.primary.withValues(alpha: 0.3),
+              borderColor: AppColors.primary,
+              borderStrokeWidth: 2,
+            ));
+         }
+      }
+    }
+    return polygons;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(digitalTwinProvider);
     final padding = MediaQuery.paddingOf(context);
+    
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark.copyWith(
-        statusBarColor: Colors.transparent,
-      ),
+      value: SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
       child: Scaffold(
         backgroundColor: const Color(0xFFFDFDFD),
         body: Column(
@@ -50,7 +222,6 @@ class _DigitalTwinStep1ScreenState extends State<DigitalTwinStep1Screen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Back Button
                     InkWell(
                       onTap: () => Navigator.pop(context),
                       borderRadius: BorderRadius.circular(24),
@@ -61,17 +232,13 @@ class _DigitalTwinStep1ScreenState extends State<DigitalTwinStep1Screen> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.arrow_back,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
+                        child: const Icon(Icons.arrow_back, color: AppColors.primary, size: 24),
                       ),
                     ),
                     // Language Selector
@@ -114,7 +281,7 @@ class _DigitalTwinStep1ScreenState extends State<DigitalTwinStep1Screen> {
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -129,7 +296,7 @@ class _DigitalTwinStep1ScreenState extends State<DigitalTwinStep1Screen> {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.15),
+                                color: AppColors.primary.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -189,171 +356,94 @@ class _DigitalTwinStep1ScreenState extends State<DigitalTwinStep1Screen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Step 1 of 4',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    const Text('Step 1 of 4', style: TextStyle(color: AppColors.primary, fontSize: 16, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Where is your farm located?',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        height: 1.2,
-                      ),
-                    ),
+                    const Text('Where is your farm located?', style: TextStyle(color: AppColors.textPrimary, fontSize: 26, fontWeight: FontWeight.bold, height: 1.2)),
                     const SizedBox(height: 12),
-                    const Text(
-                      'This helps us provide localised advice\nand weather updates.',
-                      style: TextStyle(
-                        color: Color(0xFF666666),
-                        fontSize: 15,
-                        height: 1.4,
-                      ),
-                    ),
+                    const Text('This helps us provide localised advice\nand weather updates.', style: TextStyle(color: Color(0xFF666666), fontSize: 15, height: 1.4)),
                     const SizedBox(height: 24),
                     
-                    // Map Image
+                    // Map Integration
                     ClipRRect(
                       borderRadius: BorderRadius.circular(20),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Image.asset(
-                            'assets/images/map.png',
-                            height: 180,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
+                      child: Container(
+                        height: 200,
+                        width: double.infinity,
+                        color: Colors.grey[200],
+                        child: FlutterMap(
+                          mapController: _mapController,
+                          options: MapOptions(
+                            initialCenter: state.latitude != null ? LatLng(state.latitude!, state.longitude!) : const LatLng(12.9716, 77.5946), // Default Bangalore
+                            initialZoom: 12.0,
                           ),
-                        
-                        ],
+                          children: [
+                            TileLayer(
+                              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                              userAgentPackageName: 'com.krushisetu.app',
+                            ),
+                            PolygonLayer(
+                              polygons: _buildPolygons(state),
+                            ),
+                            if (state.latitude != null)
+                              MarkerLayer(
+                                markers: [
+                                  Marker(
+                                    point: LatLng(state.latitude!, state.longitude!),
+                                    width: 40,
+                                    height: 40,
+                                    child: const Icon(Icons.location_on, color: Colors.red, size: 40),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
                     
                     // Find my location button
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF2F7F4),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFE2EFE5),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.location_on,
-                              color: AppColors.primary,
-                              size: 28,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Find my location',
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Use your device location to\nauto-fill your farm location',
-                                  style: TextStyle(
-                                    color: Color(0xFF666666),
-                                    fontSize: 13,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.my_location,
-                              color: AppColors.primary,
-                              size: 20,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    // Or select manually divider
-                    Row(
-                      children: [
-                        Expanded(child: Divider(color: Colors.grey.shade300)),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Text(
-                            'or select manually',
-                            style: TextStyle(
-                              color: Color(0xFF888888),
-                              fontSize: 14,
-                            ),
-                          ),
+                    GestureDetector(
+                      onTap: _findMyLocation,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF2F7F4),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        Expanded(child: Divider(color: Colors.grey.shade300)),
-                      ],
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: const BoxDecoration(color: Color(0xFFE2EFE5), shape: BoxShape.circle),
+                              child: _isLocating 
+                                ? const SizedBox(width: 28, height: 28, child: CircularProgressIndicator())
+                                : const Icon(Icons.location_on, color: AppColors.primary, size: 28),
+                            ),
+                            const SizedBox(width: 16),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Find my location', style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
+                                  SizedBox(height: 4),
+                                  Text('Use your device location to\nauto-fill your farm location', style: TextStyle(color: Color(0xFF666666), fontSize: 13, height: 1.3)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 24),
                     
                     // Dropdowns
-                    _buildDropdown(
-                      context: context,
-                      icon: Icons.map_outlined,
-                      title: 'State',
-                      value: _selectedState,
-                      items: _states,
-                      onChanged: (val) => setState(() => _selectedState = val),
-                    ),
+                    _buildDropdown(context: context, icon: Icons.map_outlined, title: 'State', value: state.state, items: _states, onChanged: _onStateChanged),
                     const SizedBox(height: 12),
-                    _buildDropdown(
-                      context: context,
-                      icon: Icons.location_city_outlined,
-                      title: 'District',
-                      value: _selectedDistrict,
-                      items: _districts,
-                      onChanged: (val) => setState(() => _selectedDistrict = val),
-                    ),
+                    _buildDropdown(context: context, icon: Icons.location_city_outlined, title: 'District', value: state.district, items: _districts, onChanged: _onDistrictChanged),
                     const SizedBox(height: 12),
-                    _buildDropdown(
-                      context: context,
-                      icon: Icons.spa_outlined,
-                      title: 'Taluk',
-                      value: _selectedTaluk,
-                      items: _taluks,
-                      onChanged: (val) => setState(() => _selectedTaluk = val),
-                    ),
+                    _buildSearchableDropdown(context: context, icon: Icons.spa_outlined, title: 'Taluk', value: state.taluk, onChanged: _onTalukChanged, stateObj: state),
                     const SizedBox(height: 12),
-                    _buildDropdown(
-                      context: context,
-                      icon: Icons.home_outlined,
-                      title: 'Village',
-                      value: _selectedVillage,
-                      items: _villages,
-                      onChanged: (val) => setState(() => _selectedVillage = val),
-                    ),
+                    _buildSearchableDropdown(context: context, icon: Icons.home_outlined, title: 'Village', value: state.village, onChanged: _onVillageChanged, stateObj: state),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -364,49 +454,16 @@ class _DigitalTwinStep1ScreenState extends State<DigitalTwinStep1Screen> {
             Container(
               color: Colors.white,
               padding: EdgeInsets.fromLTRB(24, 16, 24, padding.bottom + 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  PrimaryButton(
-                    iconPosition: IconPosition.right,
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DigitalTwinStep2Screen(),
-                        ),
-                      );
-                    },
-                    text: 'Continue',
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE8F5E9),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Icon(
-                          Icons.lock,
-                          color: AppColors.primary,
-                          size: 12,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Your data is private and secure',
-                        style: TextStyle(
-                          color: Color(0xFF666666),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              child: PrimaryButton(
+                iconPosition: IconPosition.right,
+                onPressed: () {
+                  if (state.state == null || state.village == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select complete location')));
+                    return;
+                  }
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const DigitalTwinStep2Screen()));
+                },
+                text: 'Continue',
               ),
             ),
           ],
@@ -415,89 +472,44 @@ class _DigitalTwinStep1ScreenState extends State<DigitalTwinStep1Screen> {
     );
   }
 
+  // Helper widgets
   Widget _buildStep(int stepNumber, String title, {bool isActive = false}) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: isActive ? AppColors.primary : const Color(0xFFF5F5F5),
-            shape: BoxShape.circle,
-          ),
+          width: 28, height: 28,
+          decoration: BoxDecoration(color: isActive ? AppColors.primary : const Color(0xFFF5F5F5), shape: BoxShape.circle),
           alignment: Alignment.center,
-          child: Text(
-            stepNumber.toString(),
-            style: TextStyle(
-              color: isActive ? Colors.white : const Color(0xFF888888),
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          child: Text(stepNumber.toString(), style: TextStyle(color: isActive ? Colors.white : const Color(0xFF888888), fontSize: 13, fontWeight: FontWeight.bold)),
         ),
         const SizedBox(height: 8),
-        Text(
-          title,
-          style: TextStyle(
-            color: isActive ? AppColors.primary : const Color(0xFF888888),
-            fontSize: 11,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-          ),
-        ),
+        Text(title, style: TextStyle(color: isActive ? AppColors.primary : const Color(0xFF888888), fontSize: 11, fontWeight: isActive ? FontWeight.bold : FontWeight.w500)),
       ],
     );
   }
 
   Widget _buildStepLine() {
     return Expanded(
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 24, left: 4, right: 4),
-        height: 1.5,
-        color: const Color(0xFFE5E5E5),
-      ),
+      child: Container(margin: const EdgeInsets.only(bottom: 24, left: 4, right: 4), height: 1.5, color: const Color(0xFFE5E5E5)),
     );
   }
 
-  Widget _buildDropdown({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String? value,
-    required List<String> items,
-    required ValueChanged<String> onChanged,
-  }) {
+  Widget _buildDropdown({required BuildContext context, required IconData icon, required String title, required String? value, required List<String> items, required ValueChanged<String> onChanged}) {
     return GestureDetector(
       onTap: () {
         showModalBottomSheet(
-          context: context,
-          backgroundColor: Colors.white,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
+          context: context, backgroundColor: Colors.white,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
           builder: (BuildContext context) {
             return SafeArea(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const SizedBox(height: 12),
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(4))),
                   const SizedBox(height: 16),
-                  Text(
-                    'Select $title',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
+                  Text('Select $title', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                   const SizedBox(height: 8),
                   Flexible(
                     child: SingleChildScrollView(
@@ -514,23 +526,13 @@ class _DigitalTwinStep1ScreenState extends State<DigitalTwinStep1Screen> {
                                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                                 decoration: BoxDecoration(
                                   color: item == value ? const Color(0xFFE8F5E9) : Colors.transparent,
-                                  border: Border(
-                                    bottom: BorderSide(color: Colors.grey.shade200),
-                                  ),
+                                  border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      item,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: item == value ? AppColors.primary : AppColors.textPrimary,
-                                        fontWeight: item == value ? FontWeight.w600 : FontWeight.normal,
-                                      ),
-                                    ),
-                                    if (item == value)
-                                      const Icon(Icons.check_circle, color: AppColors.primary, size: 20),
+                                    Text(item, style: TextStyle(fontSize: 16, color: item == value ? AppColors.primary : AppColors.textPrimary, fontWeight: item == value ? FontWeight.w600 : FontWeight.normal)),
+                                    if (item == value) const Icon(Icons.check_circle, color: AppColors.primary, size: 20),
                                   ],
                                 ),
                               ),
@@ -546,66 +548,163 @@ class _DigitalTwinStep1ScreenState extends State<DigitalTwinStep1Screen> {
           },
         );
       },
-      child: Container(
+      child: _buildSelectorContainer(icon: icon, title: title, value: value),
+    );
+  }
+
+  Widget _buildSearchableDropdown({required BuildContext context, required IconData icon, required String title, required String? value, required ValueChanged<String> onChanged, required DigitalTwinState stateObj}) {
+    return GestureDetector(
+      onTap: () {
+        if (stateObj.district == null || stateObj.state == null) {
+           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select State and District first')));
+           return;
+        }
+        showModalBottomSheet(
+          context: context, backgroundColor: Colors.white,
+          isScrollControlled: true,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+          builder: (BuildContext context) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: _SearchableBottomSheet(
+                title: title,
+                onSelected: (item) {
+                  onChanged(item);
+                  Navigator.pop(context);
+                },
+                searchCallback: (query) async {
+                   return await ref.read(digitalTwinProvider.notifier).searchAutocomplete('$query, ${stateObj.district}, ${stateObj.state}, India');
+                }
+              ),
+            );
+          },
+        );
+      },
+      child: _buildSelectorContainer(icon: icon, title: title, value: value),
+    );
+  }
+
+  Widget _buildSelectorContainer({required IconData icon, required String title, required String? value}) {
+    return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFF0F0F0)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.015),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFF0F0F0))),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF2F7F4),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: AppColors.primary,
-                size: 22,
-              ),
+              decoration: const BoxDecoration(color: Color(0xFFF2F7F4), shape: BoxShape.circle),
+              child: Icon(icon, color: AppColors.primary, size: 22),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Color(0xFF888888),
-                      fontSize: 12,
-                    ),
-                  ),
+                  Text(title, style: const TextStyle(color: Color(0xFF888888), fontSize: 12)),
                   const SizedBox(height: 4),
-                  Text(
-                    value ?? 'Select $title',
-                    style: TextStyle(
-                      color: value != null ? AppColors.textPrimary : Colors.grey,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  Text(value ?? 'Select $title', style: TextStyle(color: value != null ? AppColors.textPrimary : Colors.grey, fontSize: 15, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
-            const Icon(
-              Icons.keyboard_arrow_down,
-              color: Color(0xFF666666),
-            ),
+            const Icon(Icons.keyboard_arrow_down, color: Color(0xFF666666)),
           ],
         ),
+      );
+  }
+}
+
+class _SearchableBottomSheet extends StatefulWidget {
+  final String title;
+  final ValueChanged<String> onSelected;
+  final Future<List<String>> Function(String) searchCallback;
+
+  const _SearchableBottomSheet({required this.title, required this.onSelected, required this.searchCallback});
+
+  @override
+  State<_SearchableBottomSheet> createState() => _SearchableBottomSheetState();
+}
+
+class _SearchableBottomSheetState extends State<_SearchableBottomSheet> {
+  final TextEditingController _controller = TextEditingController();
+  List<String> _results = [];
+  bool _isLoading = false;
+
+  void _onSearch(String value) async {
+    if (value.isEmpty) {
+      setState(() { _results = []; });
+      return;
+    }
+    setState(() { _isLoading = true; });
+    final results = await widget.searchCallback(value);
+    if (mounted) {
+      setState(() {
+        _results = results;
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(4))),
+          const SizedBox(height: 16),
+          Text('Search ${widget.title}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: TextField(
+              controller: _controller,
+              onChanged: _onSearch,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'Type ${widget.title} name...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (_isLoading)
+            const Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())
+          else if (_results.isEmpty && _controller.text.isNotEmpty)
+            Padding(
+               padding: const EdgeInsets.all(24),
+               child: Text('No results found. Tap to use "${_controller.text}" anyway.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade600)),
+            ),
+          Flexible(
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.4,
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  if (_results.isEmpty && _controller.text.isNotEmpty)
+                    InkWell(
+                      onTap: () => widget.onSelected(_controller.text),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        child: Text('Use "${_controller.text}"', style: const TextStyle(fontSize: 16, color: AppColors.primary, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  for (final item in _results)
+                    InkWell(
+                      onTap: () => widget.onSelected(item),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.shade200))),
+                        child: Text(item, style: const TextStyle(fontSize: 16, color: AppColors.textPrimary)),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
-

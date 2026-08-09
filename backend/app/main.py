@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import settings
-from app.api.endpoints import auth
+from app.api.endpoints import auth, profile
 from app.db.mongodb import connect_to_mongo, close_mongo_connection
 import traceback
 
@@ -39,6 +39,7 @@ async def shutdown_db_client():
     await close_mongo_connection()
 
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
+app.include_router(profile.router, prefix=f"{settings.API_V1_STR}/profile", tags=["profile"])
 
 @app.get("/")
 def root():

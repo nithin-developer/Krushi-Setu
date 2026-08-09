@@ -3,16 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
 import 'package:krushi_setu/app/widgets/primary_button.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:krushi_setu/app/providers/digital_twin_provider.dart';
 import 'package:krushi_setu/app/pages/digital_twin_complete.dart';
 
-class DigitalTwinStep4Screen extends StatefulWidget {
+class DigitalTwinStep4Screen extends ConsumerStatefulWidget {
   const DigitalTwinStep4Screen({super.key});
 
   @override
-  State<DigitalTwinStep4Screen> createState() => _DigitalTwinStep4ScreenState();
+  ConsumerState<DigitalTwinStep4Screen> createState() => _DigitalTwinStep4ScreenState();
 }
 
-class _DigitalTwinStep4ScreenState extends State<DigitalTwinStep4Screen> {
+class _DigitalTwinStep4ScreenState extends ConsumerState<DigitalTwinStep4Screen> {
   String _selectedLanguage = 'Kannada';
   final Map<String, String> _languageIcons = {
     'Kannada': 'ಕೃ',
@@ -23,12 +25,13 @@ class _DigitalTwinStep4ScreenState extends State<DigitalTwinStep4Screen> {
     'Telugu': 'ఠ',
   };
 
-  final Set<int> _selectedCrops = {
-    0,
-    5,
-    8,
-  }; // Pre-selecting Paddy, Pulses, Vegetables based on image
+  final TextEditingController _notesController = TextEditingController();
 
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
   final List<Map<String, dynamic>> _crops = [
     {
       'title': 'Paddy',
@@ -72,6 +75,7 @@ class _DigitalTwinStep4ScreenState extends State<DigitalTwinStep4Screen> {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(digitalTwinProvider);
     final padding = MediaQuery.paddingOf(context);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
@@ -325,18 +329,18 @@ class _DigitalTwinStep4ScreenState extends State<DigitalTwinStep4Screen> {
                             itemCount: _crops.length,
                             itemBuilder: (context, index) {
                               final item = _crops[index];
-                              final isSelected = _selectedCrops.contains(index);
+                              final isSelected = state.crops.contains(item['title']);
                               final isOther = item['isOther'] == true;
 
                               return GestureDetector(
                                 onTap: () {
-                                  setState(() {
-                                    if (_selectedCrops.contains(index)) {
-                                      _selectedCrops.remove(index);
-                                    } else {
-                                      _selectedCrops.add(index);
-                                    }
-                                  });
+                                  List<String> newCrops = List.from(state.crops);
+                                  if (isSelected) {
+                                    newCrops.remove(item['title']);
+                                  } else {
+                                    newCrops.add(item['title']);
+                                  }
+                                  ref.read(digitalTwinProvider.notifier).updateCrops(newCrops, _notesController.text);
                                 },
                                 child: Container(
                                   decoration: BoxDecoration(
@@ -573,7 +577,11 @@ class _DigitalTwinStep4ScreenState extends State<DigitalTwinStep4Screen> {
                           ),
                           const SizedBox(height: 12),
                           TextField(
+                            controller: _notesController,
                             maxLines: 1,
+                            onChanged: (val) {
+                               ref.read(digitalTwinProvider.notifier).updateCrops(state.crops, val);
+                            },
                             decoration: InputDecoration(
                               hintText: 'Tap mic to speak or type here...',
                               hintStyle: const TextStyle(
@@ -629,13 +637,25 @@ class _DigitalTwinStep4ScreenState extends State<DigitalTwinStep4Screen> {
                   PrimaryButton(
                     text: 'Complete Profile',
                     iconPosition: IconPosition.right,
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DigitalTwinCompleteScreen(),
-                        ),
-                      );
+                    isLoading: state.isLoading,
+                    onPressed: () async {
+                      if (state.crops.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select at least one crop')));
+                        return;
+                      }
+                      
+                      bool success = await ref.read(digitalTwinProvider.notifier).submitProfile();
+                      
+                      if (success && mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DigitalTwinCompleteScreen(),
+                          ),
+                        );
+                      } else if (!success && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ref.read(digitalTwinProvider).error ?? 'Failed to submit profile')));
+                      }
                     },
                   ),
                   const SizedBox(height: 16),

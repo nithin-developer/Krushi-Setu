@@ -59,3 +59,17 @@ class UserModel:
             {"_id": ObjectId(user_id)}, 
             {"$set": {"last_login": now, "updated_at": now}}
         )
+
+    @classmethod
+    async def update_digital_twin_profile(cls, user_id: str, profile_data: dict):
+        collection = cls.get_collection()
+        now = datetime.now(timezone.utc)
+        await collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {
+                "digital_twin": profile_data,
+                "profile_completed": True,
+                "updated_at": now
+            }}
+        )
+

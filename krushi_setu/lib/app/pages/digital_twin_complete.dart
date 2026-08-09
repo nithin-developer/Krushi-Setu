@@ -4,16 +4,18 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
 import 'package:krushi_setu/app/widgets/primary_button.dart';
 import 'package:krushi_setu/app/pages/dashboard_screen.dart';
+import 'package:krushi_setu/app/providers/digital_twin_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class DigitalTwinCompleteScreen extends StatefulWidget {
+class DigitalTwinCompleteScreen extends ConsumerStatefulWidget {
   const DigitalTwinCompleteScreen({super.key});
 
   @override
-  State<DigitalTwinCompleteScreen> createState() =>
+  ConsumerState<DigitalTwinCompleteScreen> createState() =>
       _DigitalTwinCompleteScreenState();
 }
 
-class _DigitalTwinCompleteScreenState extends State<DigitalTwinCompleteScreen> {
+class _DigitalTwinCompleteScreenState extends ConsumerState<DigitalTwinCompleteScreen> {
   String _selectedLanguage = 'English';
   final Map<String, String> _languageIcons = {
     'Kannada': 'ಕೃ',
@@ -105,7 +107,7 @@ class _DigitalTwinCompleteScreenState extends State<DigitalTwinCompleteScreen> {
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20.0,
                             ),
-                            child: _buildSummaryCard(),
+                            child: _buildSummaryCard(ref.watch(digitalTwinProvider)),
                           ),
 
                           const SizedBox(height: 20),
@@ -267,7 +269,7 @@ class _DigitalTwinCompleteScreenState extends State<DigitalTwinCompleteScreen> {
     );
   }
 
-  Widget _buildSummaryCard() {
+  Widget _buildSummaryCard(DigitalTwinState state) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -315,9 +317,9 @@ class _DigitalTwinCompleteScreenState extends State<DigitalTwinCompleteScreen> {
             ),
             iconBgColor: const Color(0xFFE8F5E9),
             title: 'Location',
-            valueWidget: const Text(
-              'Kaginahalli, Maddur Taluk,\nMandya District, Karnataka',
-              style: TextStyle(
+            valueWidget: Text(
+              '${state.village ?? ''}, ${state.taluk ?? ''} Taluk,\n${state.district ?? ''} District, ${state.state ?? ''}',
+              style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 14,
                 height: 1.4,
@@ -332,9 +334,9 @@ class _DigitalTwinCompleteScreenState extends State<DigitalTwinCompleteScreen> {
             ),
             iconBgColor: const Color(0xFFF5F5F5),
             title: 'Land Size',
-            valueWidget: const Text(
-              '1 - 2 Acres',
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
+            valueWidget: Text(
+              '${state.landSize ?? 0} ${state.unit}',
+              style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
             ),
           ),
           _buildSummaryRow(
@@ -345,9 +347,9 @@ class _DigitalTwinCompleteScreenState extends State<DigitalTwinCompleteScreen> {
             ),
             iconBgColor: const Color(0xFFF0F8FF),
             title: 'Water Source',
-            valueWidget: const Text(
-              'Borewell',
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
+            valueWidget: Text(
+              state.waterSources.join(', '),
+              style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
             ),
           ),
           _buildSummaryRow(
@@ -360,35 +362,33 @@ class _DigitalTwinCompleteScreenState extends State<DigitalTwinCompleteScreen> {
             title: 'Last Season Crops',
             valueWidget: Row(
               children: [
-                CachedNetworkImage(
-                  imageUrl: 'https://img.icons8.com/emoji/48/sheaf-of-rice.png',
-                  width: 24,
-                  height: 24,
-                ),
-                const SizedBox(width: 4),
-                CachedNetworkImage(
-                  imageUrl: 'https://img.icons8.com/color/96/peas.png',
-                  width: 24,
-                  height: 24,
-                ),
-                const SizedBox(width: 4),
-                CachedNetworkImage(
-                  imageUrl:
-                      'https://img.icons8.com/external-flaticons-flat-flat-icons/64/external-vegetables-vegan-and-vegetarian-flaticons-flat-flat-icons.png',
-                  width: 24,
-                  height: 24,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  '+1 more',
-                  style: TextStyle(
+                ...state.crops.take(3).map((crop) => Container(
+                    margin: const EdgeInsets.only(right: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F0F0),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      crop,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  )),
+              if (state.crops.length > 3)
+                Text(
+                  '+${state.crops.length - 3} more',
+                  style: const TextStyle(
                     color: Color(0xFF666666),
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-              ],
-            ),
+            ],
+          ),
             showDivider: false,
           ),
         ],
