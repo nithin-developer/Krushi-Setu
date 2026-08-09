@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:krushi_setu/app/pages/ask_krushi_screen.dart';
+import 'package:krushi_setu/app/widgets/custom_bottom_nav_bar.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -56,7 +58,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         extendBody: true,
-        bottomNavigationBar: _buildBottomNav(),
+        bottomNavigationBar: CustomBottomNavBar(
+          currentIndex: _currentIndex,
+          onTabSelected: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          onCenterActionTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AskKrushiScreen()),
+            );
+          },
+          isCenterActionActive: false,
+        ),
       ),
     );
   }
@@ -877,114 +893,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildBottomNav() {
-    return Container(
-      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 14),
-      height: 98,
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          Container(
-            height: 70,
-            decoration: BoxDecoration(
-              color: const Color(0xFF164720),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildNavItem(Icons.home, Icons.home_outlined, 'Home', 0),
-                _buildNavItem(Icons.eco, Icons.eco_outlined, 'Fields', 1),
-                const SizedBox(width: 56), // Space for center floating button
-                _buildNavItem(Icons.description, Icons.description_outlined, 'Document', 2),
-                _buildNavItem(Icons.person, Icons.person_outline, 'Profile', 3),
-              ],
-            ),
-          ),
-          Positioned(
-            top: 0,
-            child: _buildCenterAction(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCenterAction() {
-    return GestureDetector(
-      onTap: () {},
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            colors: [Color(0xFF81C784), Color(0xFF2E7D32)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF2E7D32).withOpacity(0.4),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: const Icon(
-          Icons.mic,
-          color: Colors.white,
-          size: 32,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData selectedIcon, IconData unselectedIcon, String label, int index) {
-    bool isSelected = _currentIndex == index;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 60,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
-              child: Icon(
-                isSelected ? selectedIcon : unselectedIcon,
-                key: ValueKey<bool>(isSelected),
-                color: isSelected ? Colors.white : Colors.white60,
-                size: 26,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white60,
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
