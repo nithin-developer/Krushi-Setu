@@ -2,8 +2,10 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import settings
-from app.api.endpoints import auth, profile, voice, admin_auth, admin_users, locations
+from app.api.endpoints import auth, profile, voice, admin_auth, admin_users, admin_analytics, admin_management, locations
 from app.db.mongodb import connect_to_mongo, close_mongo_connection
+from app.models.admin import AdminModel
+from app.core.security import get_password_hash
 import traceback
 import logging
 
@@ -39,6 +41,20 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.on_event("startup")
 async def startup_db_client():
     await connect_to_mongo()
+    # Check and auto-seed default super-admin if no admins exist
+    try:
+        admin_count = await AdminModel.count_admins()
+        if admin_count == 0:
+            default_admin = {
+                "full_name": "Krushi Setu Super Admin",
+                "email": "admin@krushisetu.com",
+                "role": "super_admin",
+                "password_hash": get_password_hash("Admin@123"),
+            }
+            await AdminModel.create_admin(default_admin)
+            logging.info("Initialized default super-admin account: admin@krushisetu.com")
+    except Exception as e:
+        logging.warning(f"Could not auto-seed admin on startup: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
@@ -49,6 +65,8 @@ app.include_router(profile.router, prefix=f"{settings.API_V1_STR}/profile", tags
 app.include_router(voice.router, prefix=f"{settings.API_V1_STR}/voice", tags=["voice"])
 app.include_router(admin_auth.router, prefix=f"{settings.API_V1_STR}/admin/auth", tags=["admin-auth"])
 app.include_router(admin_users.router, prefix=f"{settings.API_V1_STR}/admin", tags=["admin-users"])
+app.include_router(admin_analytics.router, prefix=f"{settings.API_V1_STR}/admin/analytics", tags=["admin-analytics"])
+app.include_router(admin_management.router, prefix=f"{settings.API_V1_STR}/admin", tags=["admin-management"])
 app.include_router(locations.router, prefix=f"{settings.API_V1_STR}/locations", tags=["locations"])
 
 @app.get("/")

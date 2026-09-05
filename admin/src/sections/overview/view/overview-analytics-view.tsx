@@ -1,156 +1,329 @@
+import type { Farmer, AnalyticsOverview } from 'src/services/api';
+
+import dayjs from 'dayjs';
+import { useState, useEffect, useCallback } from 'react';
+
+import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import Chip from '@mui/material/Chip';
+import Table from '@mui/material/Table';
+import Alert from '@mui/material/Alert';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import TableRow from '@mui/material/TableRow';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableHead from '@mui/material/TableHead';
 import Typography from '@mui/material/Typography';
+import CardHeader from '@mui/material/CardHeader';
+import TableContainer from '@mui/material/TableContainer';
+import LinearProgress from '@mui/material/LinearProgress';
 
+import { useRouter } from 'src/routes/hooks';
+
+import { useAuth } from 'src/auth';
+import { analyticsService } from 'src/services/api';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { _posts, _tasks, _traffic, _timeline } from 'src/_mock';
 
-import { AnalyticsNews } from '../analytics-news';
-import { AnalyticsTasks } from '../analytics-tasks';
-import { AnalyticsCurrentVisits } from '../analytics-current-visits';
-import { AnalyticsOrderTimeline } from '../analytics-order-timeline';
-import { AnalyticsWebsiteVisits } from '../analytics-website-visits';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+
 import { AnalyticsWidgetSummary } from '../analytics-widget-summary';
-import { AnalyticsTrafficBySite } from '../analytics-traffic-by-site';
-import { AnalyticsCurrentSubject } from '../analytics-current-subject';
+import { AnalyticsCurrentVisits } from '../analytics-current-visits';
+import { FarmerDetailsDrawer } from '../../user/farmer-details-drawer';
 import { AnalyticsConversionRates } from '../analytics-conversion-rates';
 
 // ----------------------------------------------------------------------
 
 export function OverviewAnalyticsView() {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const [data, setData] = useState<AnalyticsOverview | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Digital Twin drawer state
+  const [selectedFarmer, setSelectedFarmer] = useState<Farmer | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const fetchOverview = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await analyticsService.getOverview();
+      setData(res);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to load platform analytics.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOverview();
+  }, [fetchOverview]);
+
+  const summary = data?.summary || {
+    total_farmers: 0,
+    active_farmers: 0,
+    banned_farmers: 0,
+    completed_profiles: 0,
+    completion_rate: 0,
+    total_land_acres: 0,
+  };
+
+  const topCrops = data?.top_crops || [];
+  const topDistricts = data?.top_districts || [];
+  const waterSources = data?.water_sources || [];
+  const recentFarmers = data?.recent_farmers || [];
+
   return (
     <DashboardContent maxWidth="xl">
-      <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
-        Hi, Welcome back 👋
-      </Typography>
+      {loading && <LinearProgress sx={{ mb: 3 }} />}
+      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            Welcome back, {user?.full_name?.split(' ')[0] || 'Admin'} 👋
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+            Krushi Setu Agricultural Platform & Farmer Operations Dashboard
+          </Typography>
+        </Box>
+
+        <Button
+          variant="outlined"
+          color="primary"
+          startIcon={<Iconify icon="solar:refresh-bold" />}
+          onClick={fetchOverview}
+          disabled={loading}
+        >
+          Refresh Data
+        </Button>
+      </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
 
       <Grid container spacing={3}>
+        {/* KPI 1: Total Farmers */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <AnalyticsWidgetSummary
-            title="Weekly sales"
-            percent={2.6}
-            total={714000}
-            icon={<img alt="Weekly sales" src="/assets/icons/glass/ic-glass-bag.svg" />}
+            title="Total Farmers"
+            percent={8.4}
+            total={summary.total_farmers}
+            color="primary"
+            icon={<Iconify icon="solar:users-group-rounded-bold-duotone" width={38} />}
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [22, 8, 35, 50, 82, 84, 77, 12],
+              categories: ['May', 'Jun', 'Jul', 'Aug', 'Sep'],
+              series: [12, 28, 45, 65, summary.total_farmers || 80],
             }}
           />
         </Grid>
 
+        {/* KPI 2: Active Farmers */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <AnalyticsWidgetSummary
-            title="New users"
-            percent={-0.1}
-            total={1352831}
-            color="secondary"
-            icon={<img alt="New users" src="/assets/icons/glass/ic-glass-users.svg" />}
+            title="Active Farmers"
+            percent={4.2}
+            total={summary.active_farmers}
+            color="info"
+            icon={<Iconify icon="solar:user-check-bold-duotone" width={38} />}
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [56, 47, 40, 62, 73, 30, 23, 54],
+              categories: ['May', 'Jun', 'Jul', 'Aug', 'Sep'],
+              series: [10, 25, 40, 60, summary.active_farmers || 75],
             }}
           />
         </Grid>
 
+        {/* KPI 3: Digital Twin Completion Rate */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <AnalyticsWidgetSummary
-            title="Purchase orders"
-            percent={2.8}
-            total={1723315}
+            title="Digital Twin Comp"
+            percent={summary.completion_rate}
+            total={summary.completed_profiles}
             color="warning"
-            icon={<img alt="Purchase orders" src="/assets/icons/glass/ic-glass-buy.svg" />}
+            icon={<Iconify icon="solar:shield-check-bold-duotone" width={38} />}
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [40, 70, 50, 28, 70, 75, 7, 64],
+              categories: ['May', 'Jun', 'Jul', 'Aug', 'Sep'],
+              series: [5, 18, 30, 48, summary.completed_profiles || 55],
             }}
           />
         </Grid>
 
+        {/* KPI 4: Total Land Under Management */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <AnalyticsWidgetSummary
-            title="Messages"
-            percent={3.6}
-            total={234}
+            title="Total Land (Acres)"
+            percent={12.5}
+            total={summary.total_land_acres}
             color="error"
-            icon={<img alt="Messages" src="/assets/icons/glass/ic-glass-message.svg" />}
+            icon={<Iconify icon="fluent:leaf-three-16-filled" width={38} />}
             chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [56, 30, 23, 54, 47, 40, 62, 73],
+              categories: ['May', 'Jun', 'Jul', 'Aug', 'Sep'],
+              series: [40, 90, 150, 220, summary.total_land_acres || 310],
             }}
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-          <AnalyticsCurrentVisits
-            title="Current visits"
-            chart={{
-              series: [
-                { label: 'America', value: 3500 },
-                { label: 'Asia', value: 2500 },
-                { label: 'Europe', value: 1500 },
-                { label: 'Africa', value: 500 },
-              ],
-            }}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6, lg: 8 }}>
-          <AnalyticsWebsiteVisits
-            title="Website visits"
-            subheader="(+43%) than last year"
-            chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-              series: [
-                { name: 'Team A', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] },
-                { name: 'Team B', data: [51, 70, 47, 67, 40, 37, 24, 70, 24] },
-              ],
-            }}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6, lg: 8 }}>
+        {/* Top Crops Cultivated */}
+        <Grid size={{ xs: 12, md: 7 }}>
           <AnalyticsConversionRates
-            title="Conversion rates"
-            subheader="(+43%) than last year"
+            title="Top Cultivated Crops"
+            subheader="Distribution of major crops registered across farmer Digital Twins"
             chart={{
-              categories: ['Italy', 'Japan', 'China', 'Canada', 'France'],
+              categories: topCrops.map((c) => c.label),
               series: [
-                { name: '2022', data: [44, 55, 41, 64, 22] },
-                { name: '2023', data: [53, 32, 33, 52, 13] },
+                {
+                  name: 'Farmers Cultivating',
+                  data: topCrops.map((c) => c.value),
+                },
               ],
             }}
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-          <AnalyticsCurrentSubject
-            title="Current subject"
+        {/* Regional District Distribution */}
+        <Grid size={{ xs: 12, md: 5 }}>
+          <AnalyticsCurrentVisits
+            title="Farmer Regional Distribution"
+            subheader="Geographic coverage across key farming districts"
             chart={{
-              categories: ['English', 'History', 'Physics', 'Geography', 'Chinese', 'Math'],
-              series: [
-                { name: 'Series 1', data: [80, 50, 30, 40, 100, 20] },
-                { name: 'Series 2', data: [20, 30, 40, 80, 20, 80] },
-                { name: 'Series 3', data: [44, 76, 78, 13, 43, 10] },
-              ],
+              series: topDistricts.map((d) => ({
+                label: d.label,
+                value: d.value,
+              })),
             }}
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6, lg: 8 }}>
-          <AnalyticsNews title="News" list={_posts.slice(0, 5)} />
+        {/* Water Resource Availability */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <AnalyticsCurrentVisits
+            title="Irrigation & Water Sources"
+            subheader="Primary water sources utilized on farm lands"
+            chart={{
+              series: waterSources.map((w) => ({
+                label: w.label,
+                value: w.value,
+              })),
+            }}
+          />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-          <AnalyticsOrderTimeline title="Order timeline" list={_timeline} />
-        </Grid>
+        {/* Recent Farmer Registrations */}
+        <Grid size={{ xs: 12, md: 8 }}>
+          <Card>
+            <CardHeader
+              title="Recent Farmer Registrations"
+              subheader="Latest farmers onboarding to Krushi Setu"
+              action={
+                <Button
+                  size="small"
+                  color="primary"
+                  onClick={() => router.push('/farmers')}
+                  endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
+                >
+                  View All Farmers
+                </Button>
+              }
+            />
 
-        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-          <AnalyticsTrafficBySite title="Traffic by site" list={_traffic} />
-        </Grid>
+            <Scrollbar>
+              <TableContainer sx={{ minWidth: 600 }}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Farmer</TableCell>
+                      <TableCell>Location</TableCell>
+                      <TableCell>Digital Twin</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Date</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {recentFarmers.length > 0 ? (
+                      recentFarmers.map((f: any) => (
+                        <TableRow
+                          key={f.id}
+                          hover
+                          sx={{ cursor: 'pointer' }}
+                          onClick={() => {
+                            setSelectedFarmer(f);
+                            setDrawerOpen(true);
+                          }}
+                        >
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                              <Avatar sx={{ bgcolor: 'primary.lighter', color: 'primary.dark', width: 36, height: 36, fontSize: '0.85rem', fontWeight: 600 }}>
+                                {f.full_name?.charAt(0).toUpperCase() || 'F'}
+                              </Avatar>
+                              <Box>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                  {f.full_name}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                  {f.phone_number || f.email}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </TableCell>
 
-        <Grid size={{ xs: 12, md: 6, lg: 8 }}>
-          <AnalyticsTasks title="Tasks" list={_tasks} />
+                          <TableCell>
+                            <Typography variant="body2">
+                              {f.district ? `${f.district}, ${f.state || ''}` : f.state || '—'}
+                            </Typography>
+                          </TableCell>
+
+                          <TableCell>
+                            {f.profile_completed ? (
+                              <Chip label="Completed" size="small" color="success" variant="filled" />
+                            ) : (
+                              <Chip label="Pending" size="small" variant="outlined" color="warning" />
+                            )}
+                          </TableCell>
+
+                          <TableCell>
+                            <Chip
+                              label={f.status}
+                              size="small"
+                              color={f.status === 'active' ? 'success' : 'error'}
+                              variant="filled"
+                            />
+                          </TableCell>
+
+                          <TableCell sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
+                            {f.created_at ? dayjs(f.created_at).format('DD MMM') : '—'}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                          No farmer registrations yet.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Scrollbar>
+          </Card>
         </Grid>
       </Grid>
+
+      {/* Detail Drawer */}
+      <FarmerDetailsDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        farmer={selectedFarmer}
+      />
     </DashboardContent>
   );
 }
+

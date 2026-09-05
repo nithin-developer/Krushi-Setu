@@ -4,21 +4,21 @@ import type { WorkspacesPopoverProps } from './components/workspaces-popover';
 
 export const _workspaces: WorkspacesPopoverProps['data'] = [
   {
-    id: 'team-1',
-    name: 'Team 1',
-    plan: 'Free',
+    id: 'krushi-prod',
+    name: 'Krushi Setu',
+    plan: 'Production',
     logo: '/assets/icons/workspaces/logo-1.webp',
   },
   {
-    id: 'team-2',
-    name: 'Team 2',
-    plan: 'Pro',
-    logo: '/assets/icons/workspaces/logo-2.webp',
+    id: 'krushi-stage',
+    name: 'Krushi Setu',
+    plan: 'Staging',
+    logo: '/assets/icons/workspaces/logo-3.webp',
   },
   {
-    id: 'team-3',
-    name: 'Team 3',
-    plan: 'Pro',
-    logo: '/assets/icons/workspaces/logo-3.webp',
+    id: 'krushi-dev',
+    name: 'Krushi Setu',
+    plan: 'Local',
+    logo: '/assets/icons/workspaces/logo-2.webp',
   },
 ];

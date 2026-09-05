@@ -1,22 +1,23 @@
 import type { RouteObject } from 'react-router';
 
 import { lazy, Suspense } from 'react';
-import { Outlet } from 'react-router-dom';
 import { varAlpha } from 'minimal-shared/utils';
+import { Outlet, Navigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 
 import { AuthLayout } from 'src/layouts/auth';
+import { AuthGuard, GuestGuard } from 'src/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 
 // ----------------------------------------------------------------------
 
 export const DashboardPage = lazy(() => import('src/pages/dashboard'));
-export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UserPage = lazy(() => import('src/pages/user'));
+export const AdvisoryPage = lazy(() => import('src/pages/advisory'));
+export const AdminsPage = lazy(() => import('src/pages/admins'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
-export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
 const renderFallback = () => (
@@ -26,6 +27,7 @@ const renderFallback = () => (
       flex: '1 1 auto',
       alignItems: 'center',
       justifyContent: 'center',
+      minHeight: '100vh',
     }}
   >
     <LinearProgress
@@ -42,25 +44,31 @@ const renderFallback = () => (
 export const routesSection: RouteObject[] = [
   {
     element: (
-      <DashboardLayout>
-        <Suspense fallback={renderFallback()}>
-          <Outlet />
-        </Suspense>
-      </DashboardLayout>
+      <AuthGuard>
+        <DashboardLayout>
+          <Suspense fallback={renderFallback()}>
+            <Outlet />
+          </Suspense>
+        </DashboardLayout>
+      </AuthGuard>
     ),
     children: [
       { index: true, element: <DashboardPage /> },
-      { path: 'user', element: <UserPage /> },
-      { path: 'products', element: <ProductsPage /> },
-      { path: 'blog', element: <BlogPage /> },
+      { path: 'farmers', element: <UserPage /> },
+      { path: 'user', element: <Navigate to="/farmers" replace /> },
+      { path: 'advisories', element: <AdvisoryPage /> },
+      { path: 'blog', element: <Navigate to="/advisories" replace /> },
+      { path: 'admins', element: <AdminsPage /> },
     ],
   },
   {
     path: 'sign-in',
     element: (
-      <AuthLayout>
-        <SignInPage />
-      </AuthLayout>
+      <GuestGuard>
+        <AuthLayout>
+          <SignInPage />
+        </AuthLayout>
+      </GuestGuard>
     ),
   },
   {
@@ -69,3 +77,4 @@ export const routesSection: RouteObject[] = [
   },
   { path: '*', element: <Page404 /> },
 ];
+

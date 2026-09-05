@@ -1,4 +1,5 @@
 import { StrictMode } from 'react';
+import { Agentation } from 'agentation';
 import { createRoot } from 'react-dom/client';
 import { Outlet, RouterProvider, createBrowserRouter } from 'react-router';
 
@@ -25,5 +26,6 @@ const root = createRoot(document.getElementById('root')!);
 root.render(
   <StrictMode>
     <RouterProvider router={router} />
+    <Agentation />
   </StrictMode>
 );

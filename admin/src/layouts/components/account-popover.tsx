@@ -14,6 +14,7 @@ import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 
 import { useRouter, usePathname } from 'src/routes/hooks';
 
+import { useAuth } from 'src/auth';
 import { _myAccount } from 'src/_mock';
 
 // ----------------------------------------------------------------------
@@ -29,7 +30,7 @@ export type AccountPopoverProps = IconButtonProps & {
 
 export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps) {
   const router = useRouter();
-
+  const { user, logout } = useAuth();
   const pathname = usePathname();
 
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
@@ -50,6 +51,15 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
     [handleClosePopover, router]
   );
 
+  const handleLogout = useCallback(() => {
+    handleClosePopover();
+    logout();
+    router.push('/sign-in');
+  }, [handleClosePopover, logout, router]);
+
+  const displayName = user?.full_name || 'Krushi Setu Admin';
+  const displayEmail = user?.email || 'admin@krushisetu.com';
+
   return (
     <>
       <IconButton
@@ -64,8 +74,15 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
         }}
         {...other}
       >
-        <Avatar src={_myAccount.photoURL} alt={_myAccount.displayName} sx={{ width: 1, height: 1 }}>
-          {_myAccount.displayName.charAt(0).toUpperCase()}
+        <Avatar
+          src={_myAccount.photoURL}
+          alt={displayName}
+          sx={{
+            width: 1,
+            height: 1,
+          }}
+        >
+          {displayName.charAt(0).toUpperCase()}
         </Avatar>
       </IconButton>
 
@@ -77,59 +94,69 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         slotProps={{
           paper: {
-            sx: { width: 200 },
+            sx: { width: 220 },
           },
         }}
       >
         <Box sx={{ p: 2, pb: 1.5 }}>
-          <Typography variant="subtitle2" noWrap>
-            {_myAccount?.displayName}
+          <Typography variant="subtitle2" noWrap sx={{ fontWeight: 600, mb: 0.5 }}>
+            {displayName}
           </Typography>
 
-          <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
-            {_myAccount?.email}
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8rem' }} noWrap>
+            {displayEmail}
           </Typography>
         </Box>
 
         <Divider sx={{ borderStyle: 'dashed' }} />
 
-        <MenuList
-          disablePadding
-          sx={{
-            p: 1,
-            gap: 0.5,
-            display: 'flex',
-            flexDirection: 'column',
-            [`& .${menuItemClasses.root}`]: {
-              px: 1,
-              gap: 2,
-              borderRadius: 0.75,
-              color: 'text.secondary',
-              '&:hover': { color: 'text.primary' },
-              [`&.${menuItemClasses.selected}`]: {
-                color: 'text.primary',
-                bgcolor: 'action.selected',
-                fontWeight: 'fontWeightSemiBold',
-              },
-            },
-          }}
-        >
-          {data.map((option) => (
-            <MenuItem
-              key={option.label}
-              selected={option.href === pathname}
-              onClick={() => handleClickItem(option.href)}
+        {data.length > 0 && (
+          <>
+            <MenuList
+              disablePadding
+              sx={{
+                p: 1,
+                gap: 0.5,
+                display: 'flex',
+                flexDirection: 'column',
+                [`& .${menuItemClasses.root}`]: {
+                  px: 1,
+                  gap: 2,
+                  borderRadius: 0.75,
+                  color: 'text.secondary',
+                  '&:hover': { color: 'text.primary' },
+                  [`&.${menuItemClasses.selected}`]: {
+                    color: 'text.primary',
+                    bgcolor: 'action.selected',
+                    fontWeight: 'fontWeightSemiBold',
+                  },
+                },
+              }}
             >
-              {option.icon}
-              {option.label}
-            </MenuItem>
-          ))}
-        </MenuList>
-
-        <Divider sx={{ borderStyle: 'dashed' }} />
+              {data.map((option) => (
+                <MenuItem
+                  key={option.label}
+                  selected={option.href === pathname}
+                  onClick={() => handleClickItem(option.href)}
+                >
+                  {option.icon}
+                  {option.label}
+                </MenuItem>
+              ))}
+            </MenuList>
+            <Divider sx={{ borderStyle: 'dashed' }} />
+          </>
+        )}
 
         <Box sx={{ p: 1 }}>
-          <Button fullWidth color="error" size="medium" variant="text">
+          <Button
+            fullWidth
+            color="error"
+            size="medium"
+            variant="text"
+            onClick={handleLogout}
+            sx={{ fontWeight: 600 }}
+          >
             Logout
           </Button>
         </Box>
@@ -137,3 +164,4 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
     </>
   );
 }
+

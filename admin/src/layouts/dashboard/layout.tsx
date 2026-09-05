@@ -1,13 +1,18 @@
 import type { Breakpoint } from '@mui/material/styles';
 
 import { merge } from 'es-toolkit';
+import { varAlpha } from 'minimal-shared/utils';
 import { useBoolean } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputAdornment from '@mui/material/InputAdornment';
 
 import { _langs, _notifications } from 'src/_mock';
+
+import { Iconify } from 'src/components/iconify';
 
 import { NavMobile, NavDesktop } from './nav';
 import { layoutClasses } from '../core/classes';
@@ -15,7 +20,6 @@ import { _account } from '../nav-config-account';
 import { dashboardLayoutVars } from './css-vars';
 import { navData } from '../nav-config-dashboard';
 import { MainSection } from '../core/main-section';
-import { Searchbar } from '../components/searchbar';
 import { _workspaces } from '../nav-config-workspace';
 import { MenuButton } from '../components/menu-button';
 import { HeaderSection } from '../core/header-section';
@@ -65,20 +69,44 @@ export function DashboardLayout({
         </Alert>
       ),
       leftArea: (
-        <>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           {/** @slot Nav mobile */}
           <MenuButton
             onClick={onOpen}
-            sx={{ mr: 1, ml: -1, [theme.breakpoints.up(layoutQuery)]: { display: 'none' } }}
+            sx={{ mr: 0.5, ml: -1, [theme.breakpoints.up(layoutQuery)]: { display: 'none' } }}
           />
           <NavMobile data={navData} open={open} onClose={onClose} workspaces={_workspaces} />
-        </>
+
+          {/** @slot Left search bar */}
+          <OutlinedInput
+            size="small"
+            placeholder="Search farmers, schemes, records..."
+            startAdornment={
+              <InputAdornment position="start">
+                <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled', width: 20, height: 20 }} />
+              </InputAdornment>
+            }
+            sx={{
+              width: { xs: 180, sm: 240, md: 320 },
+              height: 40,
+              typography: 'body2',
+              bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+              '& fieldset': {
+                border: 'none',
+              },
+              '&:hover fieldset': {
+                border: `1px solid ${theme.vars.palette.grey[400]}`,
+              },
+              '&.Mui-focused fieldset': {
+                border: `1px solid ${theme.vars.palette.primary.main}`,
+              },
+              borderRadius: 1.25,
+            }}
+          />
+        </Box>
       ),
       rightArea: (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.75 } }}>
-          {/** @slot Searchbar */}
-          <Searchbar />
-
           {/** @slot Language popover */}
           <LanguagePopover data={_langs} />
 

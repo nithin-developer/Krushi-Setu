@@ -1,4 +1,4 @@
-import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { SvgColor } from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
@@ -19,33 +19,19 @@ export const navData = [
     icon: icon('ic-analytics'),
   },
   {
-    title: 'User',
-    path: '/user',
+    title: 'Farmers',
+    path: '/farmers',
     icon: icon('ic-user'),
   },
   {
-    title: 'Product',
-    path: '/products',
-    icon: icon('ic-cart'),
-    info: (
-      <Label color="error" variant="inverted">
-        +3
-      </Label>
-    ),
+    title: 'Advisory & Schemes',
+    path: '/advisories',
+    icon: <Iconify width={22} icon="fluent:leaf-three-16-filled" sx={{ color: 'inherit' }} />,
   },
   {
-    title: 'Blog',
-    path: '/blog',
-    icon: icon('ic-blog'),
-  },
-  {
-    title: 'Sign in',
-    path: '/sign-in',
-    icon: icon('ic-lock'),
-  },
-  {
-    title: 'Not found',
-    path: '/404',
-    icon: icon('ic-disabled'),
+    title: 'Admin Management',
+    path: '/admins',
+    icon: <Iconify width={22} icon="solar:shield-user-bold-duotone" sx={{ color: 'inherit' }} />,
   },
 ];
+
