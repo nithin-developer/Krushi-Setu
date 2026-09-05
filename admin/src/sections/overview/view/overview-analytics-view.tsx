@@ -80,8 +80,7 @@ export function OverviewAnalyticsView() {
   const recentFarmers = data?.recent_farmers || [];
 
   return (
-    <DashboardContent maxWidth="xl">
-      {loading && <LinearProgress sx={{ mb: 3 }} />}
+    <DashboardContent>
       <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 700 }}>
@@ -91,6 +90,7 @@ export function OverviewAnalyticsView() {
             Krushi Setu Agricultural Platform & Farmer Operations Dashboard
           </Typography>
         </Box>
+      {loading && <LinearProgress sx={{ mb: 3 }} />}
 
         <Button
           variant="outlined"

@@ -32,7 +32,7 @@ export function UserTableToolbar({
   return (
     <Toolbar
       sx={{
-        height: 88,
+        height: 78,
         display: 'flex',
         justifyContent: 'space-between',
         p: (theme) => theme.spacing(0, 2, 0, 3),
@@ -50,6 +50,7 @@ export function UserTableToolbar({
       ) : (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, flexWrap: 'wrap' }}>
           <OutlinedInput
+            size="small"
             value={filterName}
             onChange={onFilterName}
             placeholder="Search farmers by name, phone, email..."
@@ -74,9 +75,23 @@ export function UserTableToolbar({
               <MenuItem value="banned">Banned</MenuItem>
             </Select>
           </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel id="status-filter-label">Digital Twin Status</InputLabel>
+            <Select
+              labelId="status-filter-label"
+              value={statusFilter}
+              label="Digital Twin Status"
+              onChange={onStatusFilterChange}
+            >
+              <MenuItem value="all">All Farmers</MenuItem>
+              <MenuItem value="active">Completed</MenuItem>
+              <MenuItem value="banned">In Progress</MenuItem>
+              <MenuItem value="pending">Pending</MenuItem>
+            </Select>
+          </FormControl>
         </Box>
       )}
     </Toolbar>
   );
 }
-

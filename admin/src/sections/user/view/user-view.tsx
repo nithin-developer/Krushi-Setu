@@ -164,7 +164,7 @@ export function UserView() {
     <DashboardContent>
       <Box
         sx={{
-          mb: 4,
+          mb: 3,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -190,7 +190,7 @@ export function UserView() {
         </Button>
       </Box>
 
-      <Card>
+      <Card >
         <UserTableToolbar
           numSelected={selected.length}
           filterName={filterName}
@@ -269,6 +269,7 @@ export function UserView() {
           }}
         />
       </Card>
+
 
       {/* Slide-over Farmer Digital Twin Drawer */}
       <FarmerDetailsDrawer
