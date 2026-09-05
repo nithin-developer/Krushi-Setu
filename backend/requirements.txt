@@ -8,3 +8,5 @@ python-jose[cryptography]
 google-auth
 python-multipart
 emails
+websockets
+httpx

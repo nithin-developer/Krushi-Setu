@@ -6,7 +6,6 @@ class DigitalTwinState {
   final String? state;
   final String? district;
   final String? taluk;
-  final String? village;
   final double? latitude;
   final double? longitude;
   final List<dynamic>? polygonGeojson; // OpenStreetMap polygon
@@ -29,7 +28,6 @@ class DigitalTwinState {
     this.state,
     this.district,
     this.taluk,
-    this.village,
     this.latitude,
     this.longitude,
     this.polygonGeojson,
@@ -46,7 +44,6 @@ class DigitalTwinState {
     String? state,
     String? district,
     String? taluk,
-    String? village,
     double? latitude,
     double? longitude,
     List<dynamic>? polygonGeojson,
@@ -62,7 +59,6 @@ class DigitalTwinState {
       state: state ?? this.state,
       district: district ?? this.district,
       taluk: taluk ?? this.taluk,
-      village: village ?? this.village,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       polygonGeojson: polygonGeojson ?? this.polygonGeojson,
@@ -82,7 +78,6 @@ class DigitalTwinState {
         "state": state ?? "",
         "district": district ?? "",
         "taluk": taluk ?? "",
-        "village": village ?? "",
         "latitude": latitude,
         "longitude": longitude,
         "polygon_geojson": polygonGeojson,
@@ -111,7 +106,6 @@ class DigitalTwinNotifier extends StateNotifier<DigitalTwinState> {
     String? state,
     String? district,
     String? taluk,
-    String? village,
     double? latitude,
     double? longitude,
     List<dynamic>? polygonGeojson,
@@ -120,7 +114,6 @@ class DigitalTwinNotifier extends StateNotifier<DigitalTwinState> {
       state: state,
       district: district,
       taluk: taluk,
-      village: village,
       latitude: latitude,
       longitude: longitude,
       polygonGeojson: polygonGeojson,

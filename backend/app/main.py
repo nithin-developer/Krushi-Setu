@@ -2,9 +2,15 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import settings
-from app.api.endpoints import auth, profile
+from app.api.endpoints import auth, profile, voice, admin_auth, admin_users, locations
 from app.db.mongodb import connect_to_mongo, close_mongo_connection
 import traceback
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -40,6 +46,10 @@ async def shutdown_db_client():
 
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
 app.include_router(profile.router, prefix=f"{settings.API_V1_STR}/profile", tags=["profile"])
+app.include_router(voice.router, prefix=f"{settings.API_V1_STR}/voice", tags=["voice"])
+app.include_router(admin_auth.router, prefix=f"{settings.API_V1_STR}/admin/auth", tags=["admin-auth"])
+app.include_router(admin_users.router, prefix=f"{settings.API_V1_STR}/admin", tags=["admin-users"])
+app.include_router(locations.router, prefix=f"{settings.API_V1_STR}/locations", tags=["locations"])
 
 @app.get("/")
 def root():

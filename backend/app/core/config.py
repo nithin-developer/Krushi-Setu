@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     
     # Google Auth
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "your-google-client-id.apps.googleusercontent.com")
+    
+    # Sarvam AI
+    SARVAM_API_KEY: str = os.getenv("SARVAM_API_KEY", "your-sarvam-api-key")
 
     class Config:
         env_file = ".env"

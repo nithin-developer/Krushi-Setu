@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
 import 'package:krushi_setu/app/widgets/primary_button.dart';
 import 'package:krushi_setu/app/pages/digital_twin_step_2.dart';
+import 'package:krushi_setu/core/constants/app_constants.dart';
 import 'package:krushi_setu/app/providers/digital_twin_provider.dart';
 
 class DigitalTwinStep1Screen extends ConsumerStatefulWidget {
@@ -26,33 +27,94 @@ class _DigitalTwinStep1ScreenState extends ConsumerState<DigitalTwinStep1Screen>
   };
 
   List<String> _states = [];
-  Map<String, List<String>> _stateToDistricts = {};
+  Map<String, String> _stateNameToId = {};
+  
   List<String> _districts = [];
+  Map<String, String> _districtNameToId = {};
+
+  List<String> _taluks = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchLocations();
+    _fetchStates().then((_) {
+      _findMyLocation();
+    });
   }
 
-  Future<void> _fetchLocations() async {
+  Future<void> _fetchStates() async {
     try {
-      final response = await http.get(Uri.parse('https://raw.githubusercontent.com/sab99r/Indian-States-And-Districts/master/states-and-districts.json'));
+      final response = await http.get(Uri.parse('${AppConstants.baseUrl}/locations/states'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final List<dynamic> statesData = data['states'];
         List<String> loadedStates = [];
-        Map<String, List<String>> loadedDistricts = {};
+        Map<String, String> nameToId = {};
         for (var stateItem in statesData) {
-          final stateName = stateItem['state'];
+          final stateName = stateItem['name'];
+          final stateId = stateItem['_id'];
           loadedStates.add(stateName);
-          final districts = List<String>.from(stateItem['districts'] ?? []);
-          loadedDistricts[stateName] = districts;
+          nameToId[stateName] = stateId;
         }
         if (mounted) {
           setState(() {
             _states = loadedStates;
-            _stateToDistricts = loadedDistricts;
+            _stateNameToId = nameToId;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
+  Future<void> _fetchDistricts(String stateId) async {
+    try {
+      final response = await http.get(Uri.parse('${AppConstants.baseUrl}/locations/states/$stateId/districts'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List<dynamic> districtsData = data['districts'];
+        List<String> loadedDistricts = [];
+        Map<String, String> nameToId = {};
+        for (var item in districtsData) {
+          final name = item['name'];
+          final id = item['_id'];
+          loadedDistricts.add(name);
+          nameToId[name] = id;
+        }
+        if (mounted) {
+          setState(() {
+            _districts = loadedDistricts;
+            _districtNameToId = nameToId;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
+  Future<void> _fetchTaluks(String districtId) async {
+    try {
+      final response = await http.get(Uri.parse('${AppConstants.baseUrl}/locations/districts/$districtId/sub-districts'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List<dynamic> subDistrictsData = data['sub_districts'];
+        List<String> loadedTaluks = [];
+        Map<String, String> nameToId = {};
+        for (var item in subDistrictsData) {
+          final name = item['name'];
+          final id = item['_id'];
+          loadedTaluks.add(name);
+          nameToId[name] = id;
+        }
+        if (mounted) {
+          setState(() {
+            _taluks = loadedTaluks;
           });
         }
       }
@@ -65,28 +127,35 @@ class _DigitalTwinStep1ScreenState extends ConsumerState<DigitalTwinStep1Screen>
 
   void _onStateChanged(String? stateName) {
     if (stateName == null) return;
+    final stateId = _stateNameToId[stateName];
+    if (stateId != null) {
+      _fetchDistricts(stateId);
+    }
     setState(() {
-      _districts = _stateToDistricts[stateName] ?? [];
+      _districts = [];
+      _districtNameToId = {};
+      _taluks = [];
     });
-    ref.read(digitalTwinProvider.notifier).updateLocation(state: stateName, district: null, taluk: null, village: null);
+    ref.read(digitalTwinProvider.notifier).updateLocation(state: stateName, district: null, taluk: null);
   }
 
   void _onDistrictChanged(String? districtName) {
     if (districtName == null) return;
+    final districtId = _districtNameToId[districtName];
+    if (districtId != null) {
+      _fetchTaluks(districtId);
+    }
+    setState(() {
+      _taluks = [];
+    });
     final state = ref.read(digitalTwinProvider);
-    ref.read(digitalTwinProvider.notifier).updateLocation(state: state.state, district: districtName, taluk: null, village: null);
+    ref.read(digitalTwinProvider.notifier).updateLocation(state: state.state, district: districtName, taluk: null);
   }
 
   void _onTalukChanged(String? talukName) {
     if (talukName == null) return;
     final state = ref.read(digitalTwinProvider);
-    ref.read(digitalTwinProvider.notifier).updateLocation(state: state.state, district: state.district, taluk: talukName, village: null);
-  }
-
-  void _onVillageChanged(String? villageName) {
-    if (villageName == null) return;
-    final state = ref.read(digitalTwinProvider);
-    ref.read(digitalTwinProvider.notifier).updateLocation(state: state.state, district: state.district, taluk: state.taluk, village: villageName);
+    ref.read(digitalTwinProvider.notifier).updateLocation(state: state.state, district: state.district, taluk: talukName);
     _fetchBoundaries(ref.read(digitalTwinProvider));
   }
 
@@ -94,7 +163,24 @@ class _DigitalTwinStep1ScreenState extends ConsumerState<DigitalTwinStep1Screen>
 
   bool _isLocating = false;
 
+  String? _findClosestMatch(String query, List<String> list) {
+    if (query.isEmpty) return null;
+    final queryLower = query.toLowerCase();
+    for (final item in list) {
+      if (item.toLowerCase() == queryLower) {
+        return item;
+      }
+    }
+    for (final item in list) {
+      if (item.toLowerCase().contains(queryLower) || queryLower.contains(item.toLowerCase())) {
+        return item;
+      }
+    }
+    return null;
+  }
+
   Future<void> _findMyLocation() async {
+    if (!mounted) return;
     setState(() {
       _isLocating = true;
     });
@@ -123,15 +209,45 @@ class _DigitalTwinStep1ScreenState extends ConsumerState<DigitalTwinStep1Screen>
       final res = await notifier.reverseGeocode(lat, lon);
       if (res != null) {
         final address = res['address'] ?? {};
+        
+        final rawState = address['state'] ?? (_states.isNotEmpty ? _states.first : '');
+        final rawDistrict = address['state_district'] ?? address['county'] ?? '';
+        final rawTaluk = address['city'] ?? address['town'] ?? address['suburb'] ?? '';
+        
+        String? matchedState;
+        String? matchedDistrict;
+        String? matchedTaluk;
+        
+        if (rawState.isNotEmpty) {
+           matchedState = _findClosestMatch(rawState, _states);
+           if (matchedState != null) {
+              final stateId = _stateNameToId[matchedState];
+              if (stateId != null) {
+                 await _fetchDistricts(stateId);
+                 matchedDistrict = _findClosestMatch(rawDistrict, _districts);
+                 if (matchedDistrict != null) {
+                    final districtId = _districtNameToId[matchedDistrict];
+                    if (districtId != null) {
+                       await _fetchTaluks(districtId);
+                       matchedTaluk = _findClosestMatch(rawTaluk, _taluks);
+                    }
+                 }
+              }
+           }
+        }
+        
         notifier.updateLocation(
-          state: address['state'] ?? _states.first,
-          district: address['state_district'] ?? address['county'] ?? _districts.first,
-          taluk: address['city'] ?? address['town'],
-          village: address['village'] ?? address['suburb'],
+          state: matchedState ?? (_states.isNotEmpty ? _states.first : null),
+          district: matchedDistrict ?? (_districts.isNotEmpty ? _districts.first : null),
+          taluk: matchedTaluk,
           latitude: lat,
           longitude: lon,
         );
         _mapController.move(LatLng(lat, lon), 14.0);
+        
+        if (matchedState != null && matchedDistrict != null && matchedTaluk != null) {
+            _fetchBoundaries(ref.read(digitalTwinProvider));
+        }
       }
     } catch (e) {
       if (!mounted) return;
@@ -139,15 +255,17 @@ class _DigitalTwinStep1ScreenState extends ConsumerState<DigitalTwinStep1Screen>
         SnackBar(content: Text('Failed to get location: $e')),
       );
     } finally {
-      setState(() {
-        _isLocating = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLocating = false;
+        });
+      }
     }
   }
 
   Future<void> _fetchBoundaries(DigitalTwinState state) async {
-    if (state.state != null && state.district != null && state.taluk != null && state.village != null) {
-      final query = '${state.village}, ${state.taluk}, ${state.district}, ${state.state}';
+    if (state.state != null && state.district != null && state.taluk != null) {
+      final query = '${state.taluk}, ${state.district}, ${state.state}';
       final notifier = ref.read(digitalTwinProvider.notifier);
       final res = await notifier.searchLocationGeojson(query);
       if (res != null) {
@@ -158,7 +276,6 @@ class _DigitalTwinStep1ScreenState extends ConsumerState<DigitalTwinStep1Screen>
           state: state.state,
           district: state.district,
           taluk: state.taluk,
-          village: state.village,
           latitude: lat,
           longitude: lon,
           polygonGeojson: geojson != null ? [geojson] : null,
@@ -441,9 +558,7 @@ class _DigitalTwinStep1ScreenState extends ConsumerState<DigitalTwinStep1Screen>
                     const SizedBox(height: 12),
                     _buildDropdown(context: context, icon: Icons.location_city_outlined, title: 'District', value: state.district, items: _districts, onChanged: _onDistrictChanged),
                     const SizedBox(height: 12),
-                    _buildSearchableDropdown(context: context, icon: Icons.spa_outlined, title: 'Taluk', value: state.taluk, onChanged: _onTalukChanged, stateObj: state),
-                    const SizedBox(height: 12),
-                    _buildSearchableDropdown(context: context, icon: Icons.home_outlined, title: 'Village', value: state.village, onChanged: _onVillageChanged, stateObj: state),
+                    _buildDropdown(context: context, icon: Icons.spa_outlined, title: 'Taluk', value: state.taluk, items: _taluks, onChanged: _onTalukChanged),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -457,7 +572,7 @@ class _DigitalTwinStep1ScreenState extends ConsumerState<DigitalTwinStep1Screen>
               child: PrimaryButton(
                 iconPosition: IconPosition.right,
                 onPressed: () {
-                  if (state.state == null || state.village == null) {
+                  if (state.state == null || state.taluk == null) {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select complete location')));
                     return;
                   }
@@ -552,37 +667,7 @@ class _DigitalTwinStep1ScreenState extends ConsumerState<DigitalTwinStep1Screen>
     );
   }
 
-  Widget _buildSearchableDropdown({required BuildContext context, required IconData icon, required String title, required String? value, required ValueChanged<String> onChanged, required DigitalTwinState stateObj}) {
-    return GestureDetector(
-      onTap: () {
-        if (stateObj.district == null || stateObj.state == null) {
-           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select State and District first')));
-           return;
-        }
-        showModalBottomSheet(
-          context: context, backgroundColor: Colors.white,
-          isScrollControlled: true,
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-          builder: (BuildContext context) {
-            return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-              child: _SearchableBottomSheet(
-                title: title,
-                onSelected: (item) {
-                  onChanged(item);
-                  Navigator.pop(context);
-                },
-                searchCallback: (query) async {
-                   return await ref.read(digitalTwinProvider.notifier).searchAutocomplete('$query, ${stateObj.district}, ${stateObj.state}, India');
-                }
-              ),
-            );
-          },
-        );
-      },
-      child: _buildSelectorContainer(icon: icon, title: title, value: value),
-    );
-  }
+
 
   Widget _buildSelectorContainer({required IconData icon, required String title, required String? value}) {
     return Container(
@@ -613,98 +698,3 @@ class _DigitalTwinStep1ScreenState extends ConsumerState<DigitalTwinStep1Screen>
   }
 }
 
-class _SearchableBottomSheet extends StatefulWidget {
-  final String title;
-  final ValueChanged<String> onSelected;
-  final Future<List<String>> Function(String) searchCallback;
-
-  const _SearchableBottomSheet({required this.title, required this.onSelected, required this.searchCallback});
-
-  @override
-  State<_SearchableBottomSheet> createState() => _SearchableBottomSheetState();
-}
-
-class _SearchableBottomSheetState extends State<_SearchableBottomSheet> {
-  final TextEditingController _controller = TextEditingController();
-  List<String> _results = [];
-  bool _isLoading = false;
-
-  void _onSearch(String value) async {
-    if (value.isEmpty) {
-      setState(() { _results = []; });
-      return;
-    }
-    setState(() { _isLoading = true; });
-    final results = await widget.searchCallback(value);
-    if (mounted) {
-      setState(() {
-        _results = results;
-        _isLoading = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 12),
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(4))),
-          const SizedBox(height: 16),
-          Text('Search ${widget.title}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: TextField(
-              controller: _controller,
-              onChanged: _onSearch,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: 'Type ${widget.title} name...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (_isLoading)
-            const Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())
-          else if (_results.isEmpty && _controller.text.isNotEmpty)
-            Padding(
-               padding: const EdgeInsets.all(24),
-               child: Text('No results found. Tap to use "${_controller.text}" anyway.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade600)),
-            ),
-          Flexible(
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.4,
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  if (_results.isEmpty && _controller.text.isNotEmpty)
-                    InkWell(
-                      onTap: () => widget.onSelected(_controller.text),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                        child: Text('Use "${_controller.text}"', style: const TextStyle(fontSize: 16, color: AppColors.primary, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                  for (final item in _results)
-                    InkWell(
-                      onTap: () => widget.onSelected(item),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.shade200))),
-                        child: Text(item, style: const TextStyle(fontSize: 16, color: AppColors.textPrimary)),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

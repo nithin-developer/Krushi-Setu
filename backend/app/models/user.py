@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from bson import ObjectId
 from app.db.mongodb import get_db
+from typing import Optional
 
 class UserModel:
     collection_name = "users"
@@ -72,4 +73,37 @@ class UserModel:
                 "updated_at": now
             }}
         )
+
+    @classmethod
+    async def get_all_users(cls, skip: int = 0, limit: int = 10, search: Optional[str] = None, status_filter: Optional[str] = None):
+        collection = cls.get_collection()
+        
+        query = {}
+        if search:
+            query["$or"] = [
+                {"full_name": {"$regex": search, "$options": "i"}},
+                {"email": {"$regex": search, "$options": "i"}}
+            ]
+        if status_filter:
+            query["status"] = status_filter
+            
+        users = await collection.find(query).skip(skip).limit(limit).sort("created_at", -1).to_list(length=limit)
+        for user in users:
+            user["_id"] = str(user["_id"])
+        return users
+
+    @classmethod
+    async def count_users(cls, search: Optional[str] = None, status_filter: Optional[str] = None):
+        collection = cls.get_collection()
+        
+        query = {}
+        if search:
+            query["$or"] = [
+                {"full_name": {"$regex": search, "$options": "i"}},
+                {"email": {"$regex": search, "$options": "i"}}
+            ]
+        if status_filter:
+            query["status"] = status_filter
+            
+        return await collection.count_documents(query)
 

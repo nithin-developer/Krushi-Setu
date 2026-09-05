@@ -15,9 +15,6 @@ class DigitalTwinStep2Screen extends ConsumerStatefulWidget {
 
 class _DigitalTwinStep2ScreenState extends ConsumerState<DigitalTwinStep2Screen> {
   String _selectedLanguage = 'Kannada';
-  final Map<String, String> _languageIcons = {
-    'Kannada': 'ಕೃ', 'English': 'A', 'Hindi': 'अ', 'Marathi': 'क्ष', 'Tamil': 'அ', 'Telugu': 'ఠ',
-  };
 
   int _selectedLandSizeIndex = -1;
   final TextEditingController _customSizeController = TextEditingController();

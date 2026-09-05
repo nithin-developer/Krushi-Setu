@@ -183,7 +183,7 @@ class _DigitalTwinCompleteScreenState extends ConsumerState<DigitalTwinCompleteS
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -241,7 +241,7 @@ class _DigitalTwinCompleteScreenState extends ConsumerState<DigitalTwinCompleteS
             border: Border.all(color: Colors.white, width: 4),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -277,7 +277,7 @@ class _DigitalTwinCompleteScreenState extends ConsumerState<DigitalTwinCompleteS
         border: Border.all(color: const Color(0xFFF0F0F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -318,7 +318,7 @@ class _DigitalTwinCompleteScreenState extends ConsumerState<DigitalTwinCompleteS
             iconBgColor: const Color(0xFFE8F5E9),
             title: 'Location',
             valueWidget: Text(
-              '${state.village ?? ''}, ${state.taluk ?? ''} Taluk,\n${state.district ?? ''} District, ${state.state ?? ''}',
+              '${state.taluk ?? ''} Taluk,\n${state.district ?? ''} District, ${state.state ?? ''}',
               style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 14,

@@ -17,35 +17,53 @@ class CustomBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 14),
-      height: 98,
+      margin: const EdgeInsets.only(left: 12, right: 12, bottom: 14),
+      height: 100,
       child: Stack(
         alignment: Alignment.bottomCenter,
         children: [
+          // ── Main Bar ──
           Container(
             height: 70,
             decoration: BoxDecoration(
               color: const Color(0xFF164720),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(22),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
+                  color: const Color(0xFF164720).withValues(alpha: 0.35),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildNavItem(Icons.home, Icons.home_outlined, 'Home', 0),
-                _buildNavItem(Icons.eco, Icons.eco_outlined, 'Fields', 1),
-                const SizedBox(width: 56), // Space for center floating button
-                _buildNavItem(Icons.description, Icons.description_outlined, 'Document', 2),
-                _buildNavItem(Icons.person, Icons.person_outline, 'Profile', 3),
+                // Left side nav items
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildNavItem(Icons.home_rounded, Icons.home_outlined, 'Home', 0),
+                      _buildNavItem(Icons.eco_rounded, Icons.eco_outlined, 'Fields', 1),
+                    ],
+                  ),
+                ),
+                // Center space for the floating button
+                const SizedBox(width: 80),
+                // Right side nav items
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildNavItem(Icons.description_rounded, Icons.description_outlined, 'Document', 2),
+                      _buildNavItem(Icons.person_rounded, Icons.person_outline_rounded, 'Profile', 3),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
+          // ── Floating Center Button ──
           Positioned(
             top: 0,
             child: _buildCenterAction(),
@@ -55,34 +73,61 @@ class CustomBottomNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(IconData selectedIcon, IconData unselectedIcon, String label, int index) {
+  Widget _buildNavItem(
+    IconData selectedIcon,
+    IconData unselectedIcon,
+    String label,
+    int index,
+  ) {
     bool isSelected = currentIndex == index;
     return GestureDetector(
       onTap: () => onTabSelected(index),
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 60,
+        width: 64,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+              duration: const Duration(milliseconds: 250),
+              transitionBuilder: (child, animation) =>
+                  ScaleTransition(scale: animation, child: child),
               child: Icon(
                 isSelected ? selectedIcon : unselectedIcon,
                 key: ValueKey<bool>(isSelected),
-                color: isSelected ? Colors.white : Colors.white60,
-                size: 26,
+                color: isSelected ? Colors.white : Colors.white54,
+                size: 24,
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              label,
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white60,
+                color: isSelected ? Colors.white : Colors.white54,
                 fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              ),
+              child: Text(label),
+            ),
+            const SizedBox(height: 4),
+            // Active indicator dot
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              width: isSelected ? 6 : 0,
+              height: isSelected ? 6 : 0,
+              decoration: BoxDecoration(
+                color: const Color(0xFF81C784),
+                shape: BoxShape.circle,
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF81C784).withValues(alpha: 0.6),
+                          blurRadius: 6,
+                        ),
+                      ]
+                    : [],
               ),
             ),
           ],
@@ -94,59 +139,42 @@ class CustomBottomNavBar extends StatelessWidget {
   Widget _buildCenterAction() {
     return GestureDetector(
       onTap: onCenterActionTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            colors: [Color(0xFF81C784), Color(0xFF2E7D32)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF2E7D32).withOpacity(0.4),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: const Icon(
-          Icons.mic,
-          color: Colors.white,
-          size: 32,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActiveCenterNavItem() {
-    return GestureDetector(
-      onTap: onCenterActionTap,
-      behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
-            decoration: const BoxDecoration(
-              color: Color(0xFF4CAF50),
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF81C784), Color(0xFF2E7D32)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              border: Border.all(
+                color: const Color(0xFF164720),
+                width: 4,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF2E7D32).withValues(alpha: 0.35),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: const Icon(Icons.mic, color: Colors.white, size: 24),
+            child: const Icon(Icons.mic_rounded, color: Colors.white, size: 28),
           ),
           const SizedBox(height: 4),
           const Text(
-            'Ask Krushi',
+            'Maya AI',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 9),
         ],
       ),
     );

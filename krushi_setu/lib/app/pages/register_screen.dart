@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:krushi_setu/features/auth/providers/auth_provider.dart';
 import 'package:krushi_setu/app/pages/dashboard_screen.dart';
 import 'package:krushi_setu/app/widgets/primary_button.dart';
-import 'digital_twin_setup_screen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
