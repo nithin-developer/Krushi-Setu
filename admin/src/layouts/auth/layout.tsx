@@ -52,7 +52,7 @@ export function AuthLayout({
       leftArea: (
         <>
           {/** @slot Logo */}
-          <Logo />
+          <Logo sx={{ width: '20%', marginTop: '10px' }} />
         </>
       ),
       rightArea: (
