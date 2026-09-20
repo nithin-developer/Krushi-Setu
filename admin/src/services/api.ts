@@ -185,3 +185,109 @@ export const adminManagementService = {
     return response.data;
   },
 };
+
+// ----------------------------------------------------------------------
+// Knowledge Base Service
+// ----------------------------------------------------------------------
+
+export type CollectionInfo = {
+  name: string;
+  vectors_count: number;
+  points_count: number;
+  status: string;
+};
+
+export type DocumentSummary = {
+  document_id: string;
+  document_title: string;
+  source_file: string;
+  category: string;
+  language: string;
+  region: string;
+  crops: string[];
+  tags: string[];
+  created_at: string;
+  chunks_count: number;
+};
+
+export type DocumentListResponse = {
+  documents: DocumentSummary[];
+  total_documents: number;
+  total_chunks: number;
+};
+
+export type ChunkDetail = {
+  chunk_id: string;
+  chunk_index: number;
+  section_heading: string;
+  content: string;
+};
+
+export type DocumentDetail = DocumentSummary & {
+  chunks: ChunkDetail[];
+};
+
+export type SearchResultItem = {
+  content: string;
+  score: number;
+  document_title: string;
+  section_heading: string;
+  category: string;
+  source_file: string;
+};
+
+export type SearchResponse = {
+  query: string;
+  results: SearchResultItem[];
+  total: number;
+};
+
+export const knowledgeService = {
+  getInfo: async (): Promise<CollectionInfo> => {
+    const response = await axiosInstance.get('/admin/knowledge/info');
+    return response.data;
+  },
+
+  getDocuments: async (): Promise<DocumentListResponse> => {
+    const response = await axiosInstance.get('/admin/knowledge/documents');
+    return response.data;
+  },
+
+  getDocumentById: async (documentId: string): Promise<DocumentDetail> => {
+    const response = await axiosInstance.get(`/admin/knowledge/documents/${documentId}`);
+    return response.data;
+  },
+
+  ingestText: async (data: {
+    title: string;
+    content: string;
+    category?: string;
+    language?: string;
+    region?: string;
+    tags?: string[];
+    crops?: string[];
+  }) => {
+    const response = await axiosInstance.post('/admin/knowledge/ingest/text', data);
+    return response.data;
+  },
+
+  ingestFile: async (formData: FormData) => {
+    const response = await axiosInstance.post('/admin/knowledge/ingest/file', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  deleteDocument: async (documentId: string) => {
+    const response = await axiosInstance.delete(`/admin/knowledge/documents/${documentId}`);
+    return response.data;
+  },
+
+  search: async (params: { query: string; category?: string; top_k?: number }): Promise<SearchResponse> => {
+    const response = await axiosInstance.post('/admin/knowledge/search', params);
+    return response.data;
+  },
+};
+

@@ -42,6 +42,9 @@ class _AskKrushiScreenState extends State<AskKrushiScreen>
   
   final List<ChatMessage> _messages = [];
   bool _isMicPressed = false;
+  bool _isThinking = false;
+  String _thinkingMessage = '';
+  String _lastIntent = '';
 
   // Audio playback queue
   final List<Uint8List> _audioQueue = [];
@@ -55,6 +58,8 @@ class _AskKrushiScreenState extends State<AskKrushiScreen>
   StreamSubscription? _transcriptSub;
   StreamSubscription? _aiTextSub;
   StreamSubscription? _audioSub;
+  StreamSubscription? _thinkingSub;
+  StreamSubscription? _intentSub;
 
   @override
   void initState() {
@@ -106,6 +111,7 @@ class _AskKrushiScreenState extends State<AskKrushiScreen>
     _aiTextSub = _voiceService.aiTextStream.listen((text) {
       if (mounted && text.trim().isNotEmpty) {
         setState(() {
+          _isThinking = false;  // Stop thinking when AI text arrives
           if (_messages.isNotEmpty && _messages.last.type == MessageType.user) {
             _messages.last.isComplete = true;
           }
@@ -128,6 +134,46 @@ class _AskKrushiScreenState extends State<AskKrushiScreen>
       _audioQueue.add(audioBytes);
       _playNextAudio();
     });
+
+    _thinkingSub = _voiceService.thinkingStream.listen((message) {
+      if (mounted) {
+        setState(() {
+          _isThinking = true;
+          _thinkingMessage = _getThinkingText(message);
+        });
+        _scrollToBottom();
+      }
+    });
+
+    _intentSub = _voiceService.intentStream.listen((data) {
+      if (mounted) {
+        setState(() {
+          _lastIntent = data['intent'] as String? ?? '';
+          // Once we get intent info, thinking is about to end
+        });
+      }
+    });
+  }
+
+  String _getThinkingText(String message) {
+    switch (message) {
+      case 'understanding':
+        return 'Understanding your question...';
+      case 'weather':
+        return 'Checking weather data...';
+      case 'pest_disease':
+        return 'Looking up crop health info...';
+      case 'fertilizer':
+        return 'Checking fertilizer guidance...';
+      case 'irrigation':
+        return 'Checking irrigation advice...';
+      case 'context':
+        return 'Loading your farm details...';
+      case 'generating':
+        return 'Generating response...';
+      default:
+        return 'Thinking...';
+    }
   }
   
   Future<void> _initSession() async {
@@ -186,6 +232,8 @@ class _AskKrushiScreenState extends State<AskKrushiScreen>
     _transcriptSub?.cancel();
     _aiTextSub?.cancel();
     _audioSub?.cancel();
+    _thinkingSub?.cancel();
+    _intentSub?.cancel();
     _scrollController.dispose();
     _voiceService.dispose();
     _audioPlayer.dispose();
@@ -258,8 +306,12 @@ class _AskKrushiScreenState extends State<AskKrushiScreen>
                   : ListView.builder(
                       controller: _scrollController,
                       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-                      itemCount: _messages.length,
+                      itemCount: _messages.length + (_isThinking ? 1 : 0),
                       itemBuilder: (context, index) {
+                        // Show thinking indicator at the end
+                        if (_isThinking && index == _messages.length) {
+                          return _buildThinkingBubble();
+                        }
                         final msg = _messages[index];
                         if (msg.type == MessageType.user) {
                           return _buildUserBubble(msg);
@@ -482,6 +534,66 @@ class _AskKrushiScreenState extends State<AskKrushiScreen>
                         fontSize: 16,
                         color: AppColors.textPrimary,
                         height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Thinking Indicator ────────────────────────────────────
+
+  Widget _buildThinkingBubble() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24.0, right: 40.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
+                  topLeft: Radius.circular(4),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+                border: Border.all(color: const Color(0xFFE8F5E9)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Text(
+                      _thinkingMessage.isEmpty ? 'Thinking...' : _thinkingMessage,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.grey.shade600,
+                        fontStyle: FontStyle.italic,
                       ),
                     ),
                   ),

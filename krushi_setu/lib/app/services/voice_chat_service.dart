@@ -60,12 +60,16 @@ class VoiceChatService {
   final _aiTextController = StreamController<String>.broadcast();
   final _audioController = StreamController<Uint8List>.broadcast();
   final _errorController = StreamController<String>.broadcast();
+  final _thinkingController = StreamController<String>.broadcast();
+  final _intentController = StreamController<Map<String, dynamic>>.broadcast();
   // Public streams
   Stream<VoiceState> get stateStream => _stateController.stream;
   Stream<String> get transcriptStream => _transcriptController.stream;
   Stream<String> get aiTextStream => _aiTextController.stream;
   Stream<Uint8List> get audioStream => _audioController.stream;
   Stream<String> get errorStream => _errorController.stream;
+  Stream<String> get thinkingStream => _thinkingController.stream;
+  Stream<Map<String, dynamic>> get intentStream => _intentController.stream;
 
   VoiceState get currentState => _state;
   bool get isSessionActive => _isSessionActive;
@@ -257,6 +261,19 @@ class VoiceChatService {
             break;
 
 
+          case 'thinking':
+            if (data['message'] != null) {
+              _thinkingController.add(data['message'] as String);
+            }
+            break;
+
+          case 'intent':
+            _intentController.add({
+              'intent': data['intent'] ?? 'general',
+              'confidence': data['confidence'] ?? 0.0,
+            });
+            break;
+
           case 'error':
             _errorController.add(voiceMsg.error ?? 'Unknown error');
             break;
@@ -291,5 +308,7 @@ class VoiceChatService {
     _aiTextController.close();
     _audioController.close();
     _errorController.close();
+    _thinkingController.close();
+    _intentController.close();
   }
 }

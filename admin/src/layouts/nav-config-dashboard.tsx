@@ -29,6 +29,11 @@ export const navData = [
     icon: <Iconify width={22} icon="fluent:leaf-three-16-filled" sx={{ color: 'inherit' }} />,
   },
   {
+    title: 'Knowledge Base (RAG)',
+    path: '/knowledge',
+    icon: <Iconify width={22} icon="solar:document-text-bold-duotone" sx={{ color: 'inherit' }} />,
+  },
+  {
     title: 'Admin Management',
     path: '/admins',
     icon: <Iconify width={22} icon="solar:shield-user-bold-duotone" sx={{ color: 'inherit' }} />,

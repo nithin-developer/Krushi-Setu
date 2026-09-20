@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import settings
-from app.api.endpoints import auth, profile, voice, admin_auth, admin_users, admin_analytics, admin_management, locations
+from app.api.endpoints import auth, profile, voice, chat, admin_auth, admin_users, admin_analytics, admin_management, locations, knowledge, health
 from app.db.mongodb import connect_to_mongo, close_mongo_connection
 from app.models.admin import AdminModel
 from app.core.security import get_password_hash
@@ -63,10 +63,13 @@ async def shutdown_db_client():
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
 app.include_router(profile.router, prefix=f"{settings.API_V1_STR}/profile", tags=["profile"])
 app.include_router(voice.router, prefix=f"{settings.API_V1_STR}/voice", tags=["voice"])
+app.include_router(chat.router, prefix=f"{settings.API_V1_STR}/ai", tags=["ai"])
 app.include_router(admin_auth.router, prefix=f"{settings.API_V1_STR}/admin/auth", tags=["admin-auth"])
 app.include_router(admin_users.router, prefix=f"{settings.API_V1_STR}/admin", tags=["admin-users"])
 app.include_router(admin_analytics.router, prefix=f"{settings.API_V1_STR}/admin/analytics", tags=["admin-analytics"])
 app.include_router(admin_management.router, prefix=f"{settings.API_V1_STR}/admin", tags=["admin-management"])
+app.include_router(knowledge.router, prefix=f"{settings.API_V1_STR}/admin/knowledge", tags=["admin-knowledge"])
+app.include_router(health.router, prefix=f"{settings.API_V1_STR}/health", tags=["health"])
 app.include_router(locations.router, prefix=f"{settings.API_V1_STR}/locations", tags=["locations"])
 
 @app.get("/")

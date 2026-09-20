@@ -10,3 +10,6 @@ python-multipart
 emails
 websockets
 httpx
+qdrant-client
+sentence-transformers
+PyPDF2

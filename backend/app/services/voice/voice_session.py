@@ -1,12 +1,19 @@
 """
-Voice Session Manager — Orchestrates the full STT → LLM → TTS pipeline.
+Voice Session Manager — Orchestrates the full STT → AI → TTS pipeline.
 
 Each WebSocket connection creates one VoiceSession that manages:
 - Audio buffering and forwarding to Sarvam STT
-- Transcript handling and forwarding to Sarvam LLM
-- LLM response streaming and sentence-level TTS
+- Transcript handling and forwarding to AI Orchestrator
+- AI response streaming and sentence-level TTS
 - Barge-in support (user interrupts AI speech)
 - State management and client notifications
+
+The AI Orchestrator provides:
+- Intent detection (weather, pest, fertilizer, etc.)
+- Digital Twin context (farmer's location, crops, farm details)
+- Live weather data from Open-Meteo
+- Conversation memory (persisted in MongoDB)
+- Safety validation on every response
 """
 
 import asyncio
@@ -19,8 +26,8 @@ from typing import Optional
 from fastapi import WebSocket
 
 from app.services.sarvam.sarvam_stt import SarvamSTTClient, LANGUAGE_CODES
-from app.services.sarvam.sarvam_llm import SarvamLLMClient
 from app.services.sarvam.sarvam_tts import SarvamTTSClient
+from app.services.ai.orchestrator import AIOrchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -40,9 +47,9 @@ class VoiceSession:
         1. Client sends session_start with language
         2. Session connects to Sarvam STT
         3. Client sends audio chunks → forwarded to STT
-        4. STT returns transcript → sent to LLM
-        5. LLM streams response → sentences sent to TTS
-        6. TTS audio → streamed back to client
+        4. STT returns transcript → sent to AI Orchestrator
+        5. Orchestrator: Intent → Context → LLM (streaming) → Safety
+        6. Each sentence → TTS → audio streamed back to client
         7. Returns to LISTENING for next turn
     """
 
@@ -54,8 +61,10 @@ class VoiceSession:
         self.state = VoiceState.IDLE
 
         self._stt_client: Optional[SarvamSTTClient] = None
-        self._llm_client: Optional[SarvamLLMClient] = None
+        self._orchestrator: Optional[AIOrchestrator] = None
         self._tts_client: Optional[SarvamTTSClient] = None
+
+        self._conversation_id: Optional[str] = None  # Persistent across turns
 
         self._is_active = False
         self._is_speaking = False  # True while AI audio is being sent
@@ -68,7 +77,7 @@ class VoiceSession:
         self.language_code = LANGUAGE_CODES.get(language, "kn-IN")
 
         # Initialize service clients
-        self._llm_client = SarvamLLMClient(language_code=self.language_code)
+        self._orchestrator = AIOrchestrator()
         self._tts_client = SarvamTTSClient(language_code=self.language_code)
         
         self._is_active = True
@@ -127,7 +136,7 @@ class VoiceSession:
                             "is_final": True,
                         })
                         
-                        # Process the transcript through LLM → TTS pipeline if not already processing
+                        # Process the transcript through AI Orchestrator → TTS pipeline
                         if self._turn_task is None or self._turn_task.done():
                             self._turn_task = asyncio.create_task(self._process_turn(event.transcript))
 
@@ -168,19 +177,34 @@ class VoiceSession:
 
     async def _process_turn(self, transcript: str):
         """
-        Full turn processing: transcript → LLM → TTS → audio back to client.
+        Full turn processing: transcript → AI Orchestrator → TTS → audio.
         
-        Uses sentence-level streaming for low latency:
-        LLM generates text in chunks → each sentence is sent to TTS immediately
-        → audio sent to client as it's generated.
+        The orchestrator handles:
+        - Intent detection (weather? pest? fertilizer?)
+        - Context building (Digital Twin + weather + conversation history)
+        - LLM generation (streaming, sentence-by-sentence)
+        - Safety validation (post-generation)
+        - Conversation persistence (MongoDB)
+        
+        Each sentence from the orchestrator is sent to TTS immediately
+        for low-latency audio streaming.
         """
         await self._set_state(VoiceState.PROCESSING)
         self._is_speaking = True
 
         try:
-            # Stream LLM response sentence by sentence
+            # Notify client that we're understanding the question
+            await self._send_json({
+                "type": "thinking",
+                "message": "understanding",
+            })
+
             full_ai_text = ""
-            async for sentence in self._llm_client.generate_response_stream(transcript):
+            async for sentence in self._orchestrator.answer_streaming(
+                farmer_id=self.user_id,
+                message=transcript,
+                conversation_id=self._conversation_id,
+            ):
                 full_ai_text += sentence + " "
                 
                 # Send AI text chunk to client
@@ -199,6 +223,18 @@ class VoiceSession:
                         "type": "audio",
                         "data": audio_b64,
                     })
+
+            # Capture the conversation_id for subsequent turns
+            if hasattr(self._orchestrator, 'last_conversation_id'):
+                self._conversation_id = self._orchestrator.last_conversation_id
+
+            # Send intent info to client (for loading state display)
+            if hasattr(self._orchestrator, 'last_response') and self._orchestrator.last_response:
+                await self._send_json({
+                    "type": "intent",
+                    "intent": self._orchestrator.last_response.intent,
+                    "confidence": self._orchestrator.last_response.confidence,
+                })
 
             # Signal end of AI response stream
             await self._send_json({
@@ -257,11 +293,10 @@ class VoiceSession:
         if self._stt_client:
             await self._stt_client.close()
             
-        if self._llm_client:
-            await self._llm_client.close()
+        if self._orchestrator:
+            await self._orchestrator.close()
             
         if self._tts_client:
             await self._tts_client.close()
 
         logger.info(f"Voice session closed for user={self.user_id}")
-

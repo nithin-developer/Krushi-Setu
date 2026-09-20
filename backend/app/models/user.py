@@ -9,11 +9,15 @@ class UserModel:
     @classmethod
     def get_collection(cls):
         db = get_db()
+        if db is None:
+            return None
         return db[cls.collection_name]
 
     @classmethod
     async def get_by_email(cls, email: str):
         collection = cls.get_collection()
+        if collection is None or not email:
+            return None
         user = await collection.find_one({"email": email})
         if user:
             user["_id"] = str(user["_id"])
@@ -22,18 +26,27 @@ class UserModel:
     @classmethod
     async def get_by_google_id(cls, google_id: str):
         collection = cls.get_collection()
+        if collection is None or not google_id:
+            return None
         user = await collection.find_one({"google_id": google_id})
         if user:
             user["_id"] = str(user["_id"])
         return user
 
     @classmethod
-    async def get_by_id(cls, user_id: str):
+    async def get_by_id(cls, user_id: Optional[str]):
+        if not user_id:
+            return None
         collection = cls.get_collection()
-        user = await collection.find_one({"_id": ObjectId(user_id)})
-        if user:
-            user["_id"] = str(user["_id"])
-        return user
+        if collection is None:
+            return None
+        try:
+            user = await collection.find_one({"_id": ObjectId(user_id)})
+            if user:
+                user["_id"] = str(user["_id"])
+            return user
+        except Exception:
+            return None
 
     @classmethod
     async def create_user(cls, user_data: dict):
