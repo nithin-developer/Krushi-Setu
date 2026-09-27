@@ -206,7 +206,13 @@ class ResponseGenerator:
                     yield "ಕ್ಷಮಿಸಿ, ಉತ್ತರಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
                     return
 
+                _debug_line_count = 0
                 async for line in response.aiter_lines():
+                    # Log first 5 raw SSE lines for debugging
+                    if _debug_line_count < 5:
+                        logger.debug(f"SSE raw line [{_debug_line_count}]: {line[:300]}")
+                        _debug_line_count += 1
+
                     if not line.startswith("data: "):
                         continue
 
@@ -221,7 +227,21 @@ class ResponseGenerator:
                             continue
 
                         delta = choices[0].get("delta", {})
-                        content = delta.get("content", "")
+                        content = delta.get("content") or ""
+
+                        # Warn if we see reasoning_content but no content
+                        # (indicates sarvam-105b reasoning model is being
+                        # used instead of sarvam-105b-conversations)
+                        if not content and delta.get("reasoning_content"):
+                            if _debug_line_count <= 6:
+                                logger.warning(
+                                    "Received reasoning_content but no content. "
+                                    "Consider switching to sarvam-105b-conversations."
+                                )
+                        elif not content and _debug_line_count <= 6:
+                            logger.debug(
+                                f"Empty content in delta. Keys: {list(delta.keys())}"
+                            )
 
                         if content:
                             full_response += content
