@@ -103,6 +103,9 @@ class DocumentIngestionPipeline:
 
         logger.info(f"Ingesting file: {file_path} → doc_id={document_id}")
 
+        # Delete any existing chunks for this source_file to prevent duplicates
+        self.delete_by_source_file(path.name)
+
         # Step 1: Chunk the document
         chunks = self._chunker.chunk_file(
             file_path=file_path,
@@ -300,6 +303,34 @@ class DocumentIngestionPipeline:
 
         logger.info(f"Deleted {count} chunks for document {document_id}")
         return count
+
+    def delete_by_source_file(self, source_file: str) -> int:
+        """
+        Delete all chunks associated with a specific source filename.
+        """
+        from qdrant_client.models import Filter, FieldCondition, MatchValue
+
+        try:
+            scroll_res, _ = self._qdrant.scroll(
+                collection_name=settings.QDRANT_COLLECTION,
+                scroll_filter=Filter(
+                    must=[FieldCondition(key="source_file", match=MatchValue(value=source_file))]
+                ),
+                limit=1000,
+            )
+            count = len(scroll_res)
+            if count > 0:
+                self._qdrant.delete(
+                    collection_name=settings.QDRANT_COLLECTION,
+                    points_selector=Filter(
+                        must=[FieldCondition(key="source_file", match=MatchValue(value=source_file))]
+                    ),
+                )
+                logger.info(f"Deleted {count} existing chunks for source_file={source_file}")
+            return count
+        except Exception as e:
+            logger.error(f"Error deleting by source file {source_file}: {e}")
+            return 0
 
     def get_documents(self) -> List[Dict[str, Any]]:
         """

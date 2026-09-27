@@ -84,6 +84,7 @@ class AIOrchestrator:
         farmer_id: str,
         message: str,
         conversation_id: Optional[str] = None,
+        language: Optional[str] = None,
     ) -> AIResponse:
         """
         Process a farmer's message and return an AI response (non-streaming).
@@ -92,6 +93,7 @@ class AIOrchestrator:
             farmer_id: The authenticated farmer's user ID
             message: The farmer's text message (Kannada/English/etc.)
             conversation_id: Optional existing conversation ID for continuity
+            language: Optional preferred language code (e.g. "kn", "hi", "kn-IN")
         
         Returns:
             AIResponse with the answer, intent, confidence, and metadata.
@@ -129,8 +131,19 @@ class AIOrchestrator:
             conversation_summary=conversation_summary,
         )
 
-        # Use detected language, falling back to profile, then default "kn"
-        language = detected_language or farmer_context.farmer.language or "kn"
+        # Resolve target language:
+        # 1. If message contains Indic script (Kannada, Hindi, etc.), use detected language
+        # 2. Else if explicit language was requested, use requested language
+        # 3. Else fallback to profile language or default "kn"
+        if detected_language and detected_language != "en":
+            target_lang = detected_language
+        elif language:
+            target_lang = language.split("-")[0] if "-" in language else language
+        elif farmer_context.farmer.language:
+            target_lang = farmer_context.farmer.language
+        else:
+            target_lang = "kn"
+        language = target_lang
 
         # ── Step 5: RAG — retrieve relevant knowledge chunks ─────────
         kb_chunks = []
@@ -224,6 +237,7 @@ class AIOrchestrator:
         farmer_id: str,
         message: str,
         conversation_id: Optional[str] = None,
+        language: Optional[str] = None,
     ) -> AsyncGenerator[str, None]:
         """
         Process a farmer's message and yield response sentences as they stream.
@@ -272,7 +286,19 @@ class AIOrchestrator:
             conversation_summary=conversation_summary,
         )
 
-        language = detected_language or farmer_context.farmer.language or "kn"
+        # Resolve target language:
+        # 1. If message contains Indic script (Kannada, Hindi, etc.), use detected language
+        # 2. Else if explicit language was requested, use requested language
+        # 3. Else fallback to profile language or default "kn"
+        if detected_language and detected_language != "en":
+            target_lang = detected_language
+        elif language:
+            target_lang = language.split("-")[0] if "-" in language else language
+        elif farmer_context.farmer.language:
+            target_lang = farmer_context.farmer.language
+        else:
+            target_lang = "kn"
+        language = target_lang
 
         # ── Step 5: RAG — retrieve knowledge chunks ───────────────────
         kb_chunks = []

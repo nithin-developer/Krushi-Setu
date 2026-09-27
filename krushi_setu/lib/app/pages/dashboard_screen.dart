@@ -3,6 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:krushi_setu/app/theme/app_colors.dart';
 import 'package:krushi_setu/app/pages/ask_krushi_screen.dart';
+import 'package:krushi_setu/app/pages/blogs_screen.dart';
+import 'package:krushi_setu/app/pages/profile_screen.dart';
+import 'package:krushi_setu/app/pages/fields_screen.dart';
+import 'package:krushi_setu/app/pages/market_prices_screen.dart';
+import 'package:krushi_setu/app/services/user_service.dart';
 import 'package:krushi_setu/app/widgets/custom_bottom_nav_bar.dart';
 import 'package:krushi_setu/app/widgets/language_selector.dart';
 import 'package:krushi_setu/app/services/weather_service.dart';
@@ -17,8 +22,11 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
   String _selectedLanguage = 'English';
+  String _farmerName = 'Farmer';
 
   final WeatherService _weatherService = WeatherService();
+  final UserService _userService = UserService();
+
   WeatherData? _weather;
   bool _isLoadingWeather = true;
 
@@ -26,6 +34,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _loadWeather();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final user = await _userService.fetchMyProfile();
+      if (user != null && mounted) {
+        setState(() {
+          _farmerName = user.fullName;
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadWeather() async {
@@ -45,6 +65,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Widget _buildBodyForTab() {
+    switch (_currentIndex) {
+      case 1:
+        return FieldsScreen(
+          onBackPressed: () {
+            setState(() {
+              _currentIndex = 0;
+            });
+          },
+        );
+      case 2:
+        return const BlogsScreen();
+      case 3:
+        return ProfileScreen(
+          onNavigateToFields: () {
+            setState(() {
+              _currentIndex = 1;
+            });
+          },
+          onBackPressed: () {
+            setState(() {
+              _currentIndex = 0;
+            });
+          },
+        );
+      case 0:
+      default:
+        return Column(
+          children: [
+            // ── Fixed Header ──
+            _buildHeader(),
+            // ── Scrollable Content ──
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 20),
+                      _buildAiAssistantBanner(),
+                      const SizedBox(height: 28),
+                      _buildQuickAccess(),
+                      const SizedBox(height: 28),
+                      _buildWeatherCard(),
+                      if (_weather != null &&
+                          _weather!.dailyForecasts.isNotEmpty)
+                        const SizedBox(height: 24),
+                      if (_weather != null &&
+                          _weather!.dailyForecasts.isNotEmpty)
+                        _buildDailyForecastCard(),
+                      const SizedBox(height: 20), // padding for bottom nav
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -54,40 +137,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF8F9FA),
         body: SafeArea(
-          child: Column(
-            children: [
-              // ── Fixed Header ──
-              _buildHeader(),
-              // ── Scrollable Content ──
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 20),
-                        _buildAiAssistantBanner(),
-                        const SizedBox(height: 28),
-                        _buildQuickAccess(),
-                        const SizedBox(height: 28),
-                        _buildWeatherCard(),
-                        if (_weather != null &&
-                            _weather!.dailyForecasts.isNotEmpty)
-                          const SizedBox(height: 24),
-                        if (_weather != null &&
-                            _weather!.dailyForecasts.isNotEmpty)
-                          _buildDailyForecastCard(),
-                        const SizedBox(height: 20), // padding for bottom nav
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          child: _buildBodyForTab(),
         ),
         extendBody: true,
         bottomNavigationBar: CustomBottomNavBar(
@@ -132,9 +182,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Hello, Ramesh!',
-                    style: TextStyle(
+                  Text(
+                    'Hello, $_farmerName!',
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
                       color: AppColors.textPrimary,
@@ -266,23 +316,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: AppColors.textPrimary,
               ),
             ),
-            Row(
-              children: [
-                const Text(
-                  'View All',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BlogsScreen()),
+                );
+              },
+              child: const Row(
+                children: [
+                  Text(
+                    'View All',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  color: AppColors.primary,
-                  size: 12,
-                ),
-              ],
+                  SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: AppColors.primary,
+                    size: 12,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -295,6 +353,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: 'Crop\nPlanner',
               bgColor: const Color(0xFFE8F5E9), // Light green
               iconColor: Colors.green,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BlogsScreen(initialCategory: 'farming_tips')),
+                );
+              },
             ),
             const SizedBox(width: 12),
             _buildQuickAccessItem(
@@ -302,6 +366,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: 'Knowledge\nBase',
               bgColor: const Color(0xFFE3F2FD), // Light blue
               iconColor: Colors.blue,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BlogsScreen(initialCategory: 'all')),
+                );
+              },
             ),
             const SizedBox(width: 12),
             _buildQuickAccessItem(
@@ -309,6 +379,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: 'Schemes\n& Benefits',
               bgColor: const Color(0xFFFFF3E0), // Light orange
               iconColor: Colors.orange,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BlogsScreen(initialCategory: 'scheme')),
+                );
+              },
             ),
             const SizedBox(width: 12),
             _buildQuickAccessItem(
@@ -316,6 +392,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: 'Market\nPrices',
               bgColor: const Color(0xFFF3E5F5), // Light purple
               iconColor: Colors.purple,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MarketPricesScreen()),
+                );
+              },
             ),
           ],
         ),
@@ -328,30 +410,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required String title,
     required Color bgColor,
     required Color iconColor,
+    VoidCallback? onTap,
   }) {
     return Expanded(
-      child: Column(
-        children: [
-          Container(
-            height: 68,
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(18),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Column(
+          children: [
+            Container(
+              height: 68,
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Center(child: Icon(icon, color: iconColor, size: 30)),
             ),
-            child: Center(child: Icon(icon, color: iconColor, size: 30)),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-              height: 1.3,
+            const SizedBox(height: 8),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                height: 1.3,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

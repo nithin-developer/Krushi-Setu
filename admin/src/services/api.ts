@@ -291,3 +291,78 @@ export const knowledgeService = {
   },
 };
 
+// ----------------------------------------------------------------------
+// Blog Service
+// ----------------------------------------------------------------------
+
+export type BlogPost = {
+  id: string;
+  title: string;
+  slug: string;
+  summary: string;
+  content: string;
+  cover_image?: string;
+  category: string;
+  category_label?: string;
+  tags?: string[];
+  target_crops?: string[];
+  author?: string;
+  status: 'published' | 'draft';
+  views_count?: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BlogListResponse = {
+  blogs: BlogPost[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+};
+
+export const blogService = {
+  getBlogs: async (params?: {
+    page?: number;
+    limit?: number;
+    category?: string;
+    status?: string;
+    search?: string;
+  }): Promise<BlogListResponse> => {
+    const response = await axiosInstance.get('/blogs', { params });
+    return response.data;
+  },
+
+  getBlogById: async (blogId: string): Promise<BlogPost> => {
+    const response = await axiosInstance.get(`/blogs/${blogId}`);
+    return response.data;
+  },
+
+  createBlog: async (data: Partial<BlogPost>): Promise<BlogPost> => {
+    const response = await axiosInstance.post('/blogs', data);
+    return response.data;
+  },
+
+  updateBlog: async (blogId: string, data: Partial<BlogPost>): Promise<BlogPost> => {
+    const response = await axiosInstance.put(`/blogs/${blogId}`, data);
+    return response.data;
+  },
+
+  deleteBlog: async (blogId: string) => {
+    const response = await axiosInstance.delete(`/blogs/${blogId}`);
+    return response.data;
+  },
+
+  uploadImage: async (file: File): Promise<{ url: string; filename: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axiosInstance.post('/blogs/upload-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+};
+
+

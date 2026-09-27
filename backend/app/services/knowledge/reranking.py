@@ -113,5 +113,18 @@ class Reranker:
         # Sort by reranked score descending
         scored_chunks.sort(key=lambda c: c.score, reverse=True)
 
-        logger.info(f"Reranked {len(chunks)} candidates -> returning top {min(top_n, len(scored_chunks))}")
-        return scored_chunks[:top_n]
+        # Deduplicate chunks based on normalized content text
+        deduped_chunks = []
+        seen_contents = set()
+
+        for chunk in scored_chunks:
+            # Normalize whitespace and lowercase for content comparison
+            normalized = " ".join(chunk.content.strip().split())
+            if normalized not in seen_contents:
+                seen_contents.add(normalized)
+                deduped_chunks.append(chunk)
+
+        logger.info(
+            f"Reranked {len(chunks)} candidates -> deduped {len(deduped_chunks)} -> returning top {min(top_n, len(deduped_chunks))}"
+        )
+        return deduped_chunks[:top_n]

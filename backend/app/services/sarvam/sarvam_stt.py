@@ -17,8 +17,8 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Sarvam STT streaming WebSocket URL
-SARVAM_STT_WS_URL = "wss://api.sarvam.ai/speech-to-text-translate/ws"
+# Sarvam STT streaming WebSocket URL — transcribe in spoken language (no English translation)
+SARVAM_STT_WS_URL = "wss://api.sarvam.ai/speech-to-text/ws"
 
 # Language code mapping
 LANGUAGE_CODES = {
@@ -28,6 +28,11 @@ LANGUAGE_CODES = {
     "Telugu": "te-IN",
     "Tamil": "ta-IN",
     "Marathi": "mr-IN",
+    "Malayalam": "ml-IN",
+    "Bengali": "bn-IN",
+    "Gujarati": "gu-IN",
+    "Punjabi": "pa-IN",
+    "Odia": "od-IN",
 }
 
 

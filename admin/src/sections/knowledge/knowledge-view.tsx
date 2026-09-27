@@ -1,39 +1,42 @@
+import type {
+  CollectionInfo,
+  DocumentDetail,
+  DocumentSummary,
+  SearchResultItem} from 'src/services/api';
+
 import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
+import Tab from '@mui/material/Tab';
 import Card from '@mui/material/Card';
+import Tabs from '@mui/material/Tabs';
+import Chip from '@mui/material/Chip';
+import Grid from '@mui/material/Grid';
 import Table from '@mui/material/Table';
+import Alert from '@mui/material/Alert';
+import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Tooltip from '@mui/material/Tooltip';
 import TableRow from '@mui/material/TableRow';
+import MenuItem from '@mui/material/MenuItem';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
-import Typography from '@mui/material/Typography';
-import TableContainer from '@mui/material/TableContainer';
-import TablePagination from '@mui/material/TablePagination';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import Chip from '@mui/material/Chip';
-import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
-import MenuItem from '@mui/material/MenuItem';
+import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import TableContainer from '@mui/material/TableContainer';
 import LinearProgress from '@mui/material/LinearProgress';
-import Alert from '@mui/material/Alert';
-import Paper from '@mui/material/Paper';
+import TablePagination from '@mui/material/TablePagination';
 
+import {
+  knowledgeService
+} from 'src/services/api';
 import { DashboardContent } from 'src/layouts/dashboard';
+
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import {
-  knowledgeService,
-  CollectionInfo,
-  DocumentSummary,
-  DocumentDetail,
-  SearchResultItem,
-} from 'src/services/api';
 
 // ----------------------------------------------------------------------
 

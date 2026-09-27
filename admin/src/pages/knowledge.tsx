@@ -1,4 +1,5 @@
 import { CONFIG } from 'src/config-global';
+
 import { KnowledgeView } from 'src/sections/knowledge/knowledge-view';
 
 // ----------------------------------------------------------------------

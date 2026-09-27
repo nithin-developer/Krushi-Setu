@@ -2,7 +2,9 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import settings
-from app.api.endpoints import auth, profile, voice, chat, admin_auth, admin_users, admin_analytics, admin_management, locations, knowledge, health
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+from app.api.endpoints import auth, profile, voice, chat, admin_auth, admin_users, admin_analytics, admin_management, locations, knowledge, health, blogs, market_prices
 from app.db.mongodb import connect_to_mongo, close_mongo_connection
 from app.models.admin import AdminModel
 from app.core.security import get_password_hash
@@ -18,6 +20,11 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+
+# Mount uploads static directory for blog cover images & media
+uploads_dir = Path("uploads")
+uploads_dir.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # CORS: allow_origins=["*"] with allow_credentials=True is invalid per browser CORS spec.
 # Use allow_origin_regex to match all origins while keeping credentials support.
@@ -71,6 +78,8 @@ app.include_router(admin_management.router, prefix=f"{settings.API_V1_STR}/admin
 app.include_router(knowledge.router, prefix=f"{settings.API_V1_STR}/admin/knowledge", tags=["admin-knowledge"])
 app.include_router(health.router, prefix=f"{settings.API_V1_STR}/health", tags=["health"])
 app.include_router(locations.router, prefix=f"{settings.API_V1_STR}/locations", tags=["locations"])
+app.include_router(blogs.router, prefix=f"{settings.API_V1_STR}/blogs", tags=["blogs"])
+app.include_router(market_prices.router, prefix=f"{settings.API_V1_STR}/market-prices", tags=["market-prices"])
 
 @app.get("/")
 def root():

@@ -31,9 +31,16 @@ class UserResponse(UserBase):
     id: str
     profile_completed: bool
     status: str
+    digital_twin: Optional[dict] = None
     last_login: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
+
+class UserUpdateProfile(BaseModel):
+    full_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    preferred_language: Optional[str] = None
+    profile_image: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr

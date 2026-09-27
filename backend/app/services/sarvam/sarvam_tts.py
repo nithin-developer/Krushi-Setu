@@ -5,6 +5,7 @@ Converts text to speech audio using Sarvam's TTS REST API.
 Returns base64-encoded WAV audio for each text chunk.
 """
 
+import re
 import base64
 import logging
 from typing import Optional
@@ -18,14 +19,19 @@ logger = logging.getLogger(__name__)
 
 SARVAM_TTS_URL = "https://api.sarvam.ai/text-to-speech"
 
-# Language to voice mapping — using natural-sounding Bulbul voices
+# Language to voice mapping — using natural-sounding Bulbul v3 voices
 LANGUAGE_VOICE_MAP = {
-    "kn-IN": "anushka",    # Kannada female voice
-    "en-IN": "anushka",    # English Indian female voice
-    "hi-IN": "anushka",    # Hindi female voice
-    "te-IN": "anushka",    # Telugu female voice
-    "ta-IN": "anushka",    # Tamil female voice
-    "mr-IN": "anushka",    # Marathi female voice
+    "kn-IN": "rohan",      # Kannada female voice
+    "en-IN": "rohan",      # English Indian female voice
+    "hi-IN": "rohan",      # Hindi female voice
+    "te-IN": "rohan",      # Telugu female voice
+    "ta-IN": "rohan",      # Tamil female voice
+    "mr-IN": "rohan",      # Marathi female voice
+    "ml-IN": "rohan",      # Malayalam female voice
+    "bn-IN": "rohan",      # Bengali female voice
+    "gu-IN": "rohan",      # Gujarati female voice
+    "pa-IN": "rohan",      # Punjabi female voice
+    "od-IN": "rohan",      # Odia female voice
 }
 
 
@@ -44,7 +50,7 @@ class SarvamTTSClient:
         pace: float = 1.0,
     ):
         self.language_code = language_code
-        self.speaker = speaker or LANGUAGE_VOICE_MAP.get(language_code, "anushka")
+        self.speaker = speaker or LANGUAGE_VOICE_MAP.get(language_code, "kavya")
         self.pace = pace
         self._http_client = httpx.AsyncClient(timeout=30.0)
 
@@ -61,8 +67,16 @@ class SarvamTTSClient:
         if not text or not text.strip():
             return None
 
-        # Pre-process text for natural spoken Kannada
-        spoken_text = KannadaSpokenFormatter.format_for_speech(text)
+        # Pre-process text for natural speech
+        if self.language_code.startswith("kn"):
+            spoken_text = KannadaSpokenFormatter.format_for_speech(text)
+        else:
+            # Strip markdown, asterisks, emojis and extra spaces for other languages
+            s = re.sub(r'[*_~`#]', '', text)
+            s = re.sub(r'^\s*[-+]\s*', '', s, flags=re.MULTILINE)
+            s = re.sub(r'[\U00010000-\U0010ffff\u2600-\u26FF\u2700-\u27BF]', '', s)
+            spoken_text = re.sub(r'\s+', ' ', s).strip()
+
         if not spoken_text:
             return None
 
@@ -75,7 +89,7 @@ class SarvamTTSClient:
             "inputs": [spoken_text],
             "target_language_code": self.language_code,
             "speaker": self.speaker,
-            "model": "bulbul:v2",
+            "model": "bulbul:v3",
             "pace": self.pace,
             "speech_sample_rate": 16000,
             "enable_preprocessing": True,

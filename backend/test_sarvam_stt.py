@@ -9,7 +9,7 @@ load_dotenv("d:\\Nithin\\College Works\\Final Year Project\\Krushi Setu\\backend
 SARVAM_API_KEY = os.getenv("SARVAM_API_KEY")
 
 async def test_ws(payload_format):
-    url = "wss://api.sarvam.ai/speech-to-text-translate/ws?model=saaras:v3&language_code=kn-IN"
+    url = "wss://api.sarvam.ai/speech-to-text/ws?model=saaras:v3&language_code=kn-IN&mode=transcribe"
     headers = {"api-subscription-key": SARVAM_API_KEY}
     try:
         async with websockets.connect(url, additional_headers=headers) as ws:

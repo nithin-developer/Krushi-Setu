@@ -24,6 +24,11 @@ export const navData = [
     icon: icon('ic-user'),
   },
   {
+    title: 'Blog & Advisories',
+    path: '/blog',
+    icon: <Iconify width={22} icon="solar:pen-bold-duotone" sx={{ color: 'inherit' }} />,
+  },
+  {
     title: 'Advisory & Schemes',
     path: '/advisories',
     icon: <Iconify width={22} icon="fluent:leaf-three-16-filled" sx={{ color: 'inherit' }} />,

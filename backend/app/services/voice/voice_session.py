@@ -200,10 +200,12 @@ class VoiceSession:
             })
 
             full_ai_text = ""
+            session_lang = self.language_code.split("-")[0] if self.language_code else "kn"
             async for sentence in self._orchestrator.answer_streaming(
                 farmer_id=self.user_id,
                 message=transcript,
                 conversation_id=self._conversation_id,
+                language=session_lang,
             ):
                 full_ai_text += sentence + " "
                 

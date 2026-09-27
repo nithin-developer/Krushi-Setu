@@ -88,6 +88,17 @@ class UserModel:
         )
 
     @classmethod
+    async def update_user_profile(cls, user_id: str, update_data: dict):
+        collection = cls.get_collection()
+        now = datetime.now(timezone.utc)
+        update_data["updated_at"] = now
+        await collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_data}
+        )
+        return await cls.get_by_id(user_id)
+
+    @classmethod
     async def get_all_users(cls, skip: int = 0, limit: int = 10, search: Optional[str] = None, status_filter: Optional[str] = None):
         collection = cls.get_collection()
         
